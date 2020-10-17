@@ -1,6 +1,5 @@
 #include <stdio.h>
 
-// RGBの構造体型
 typedef struct {
   unsigned char red;
   unsigned char green;
@@ -13,15 +12,15 @@ void pick_green(RGB *rgb);     // カラー画像の緑だけを取り出し出�
 void pick_blue(RGB *rgb);      // カラー画像の青だけを取り出し出力
 
 int main(void) {
-  FILE *image;                // ファイルポインタ
-  RGB rgb[65536];             // RGB画像用の配列
+  FILE *image;    // ファイルポインタ
+  RGB rgb[65536]; // RGB画像用の配列
 
   // 画像データを開く
   image = fopen("../../imgdata/pepper.ppm", "rb");
 
   // ファイルを開けなかった場合プログラムを終了
   if (image == NULL) {
-    printf("file load error\n");
+    printf("ファイルが開けませんでした。\n");
     return -1;
   }
 
@@ -48,32 +47,30 @@ int main(void) {
 
 void read_header(FILE *image) {
   char buf[256];  // ヘッダ読み込み時のバッファ
-  int count = 3;  // コメントなしの場合のヘッダの行数
+  int count_line = 3;  // コメントなしの場合のヘッダの行数
 
   // ヘッダの行数が0になるまで読み飛ばす
-  while (count != 0) {
+  while (count_line != 0) {
     fgets(buf, sizeof(buf), image);
-    if (buf[0] != '#') count -= 1;   // 読み込んだ行がコメントではない場合countを減らす
+    if (buf[0] != '#') count_line -= 1;   // 読み込んだ行がコメントではない場合countを減らす
   }
 }
 
 void pick_red(RGB *rgb) {
-  FILE *image_red;
   int i;
+  FILE *image_red;
 
   // 書き込むファイルを開く
   image_red = fopen("images/red.pgm", "wb");
 
   // ファイルを開けなかった場合プログラムを終了
   if (image_red == NULL) {
-    printf("file load error\n");
+    printf("ファイルが開けませんでした。\n");
     return;
   }
 
   // ヘッダを書き込む
-  fputs("P5\n", image_red);       // 形式
-  fputs("256 256\n", image_red);  // 画像サイズ
-  fputs("255\n", image_red);      // 最大輝度値
+  fputs("P5\n256 256\n255\n", image_red);
 
   // 画像データを書き込む
   for (i=0; i<65536; i++) {
@@ -85,22 +82,20 @@ void pick_red(RGB *rgb) {
 }
 
 void pick_green(RGB *rgb) {
-  FILE *image_green;
   int i;
+  FILE *image_green;
 
   // 書き込むファイルを開く
   image_green = fopen("images/green.pgm", "wb");
 
   // ファイルを開けなかった場合プログラムを終了
   if (image_green == NULL) {
-    printf("file load error\n");
+    printf("ファイルが開けませんでした。\n");
     return;
   }
 
   // ヘッダを書き込む
-  fputs("P5\n", image_green);       // 形式
-  fputs("256 256\n", image_green);  // 画像サイズ
-  fputs("255\n", image_green);      // 最大輝度値
+  fputs("P5\n256 256\n255\n", image_green);
 
   // 画像データを書き込む
   for (i=0; i<65536; i++) {
@@ -112,22 +107,20 @@ void pick_green(RGB *rgb) {
 }
 
 void pick_blue(RGB *rgb) {
-  FILE *image_blue;
   int i;
+  FILE *image_blue;
 
   // 書き込むファイルを開く
   image_blue = fopen("images/blue.pgm", "wb");
 
   // ファイルを開けなかった場合プログラムを終了
   if (image_blue == NULL) {
-    printf("file load error\n");
+    printf("ファイルが開ませんでした。\n");
     return;
   }
 
   // ヘッダを書き込む
-  fputs("P5\n", image_blue);       // 形式
-  fputs("256 256\n", image_blue);  // 画像サイズ
-  fputs("255\n", image_blue);      // 最大輝度値
+  fputs("P5\n256 256\n255\n", image_blue);
 
   // 画像データを書き込む
   for (i=0; i<65536; i++) {
