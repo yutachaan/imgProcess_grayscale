@@ -43,19 +43,19 @@ int main(int argc, char *argv[]) {
   fclose(img);
 
   // カラー画像から赤を抽出して出力
-  output_img(rgb, "images/red.pgm");
+  output_img(rgb, "red.pgm");
 
   // カラー画像から緑を抽出して出力
-  output_img(rgb, "images/green.pgm");
+  output_img(rgb, "green.pgm");
 
   // カラー画像から青を抽出して出力
-  output_img(rgb, "images/blue.pgm");
+  output_img(rgb, "blue.pgm");
 
   // 赤・緑・青の平均値を求め、抽出
-  output_img(rgb, "images/mean.pgm");
+  output_img(rgb, "mean.pgm");
 
   // 輝度Yを求め、抽出
-  output_img(rgb, "images/y.pgm");
+  output_img(rgb, "y.pgm");
 
   return 0;
 }
