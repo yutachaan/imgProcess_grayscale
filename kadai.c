@@ -1,8 +1,3 @@
-/* TODO:
-   - 自動でファイル名を決めるようにする
-   - mallocで配列を確保するようにする
-*/
-
 #include <stdio.h>
 
 typedef struct {
