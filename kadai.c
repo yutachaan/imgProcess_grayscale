@@ -1,7 +1,7 @@
 /* TODO:
    - output関係の関数の動作をまとめる
+   - 自動でファイル名を決めるようにする
    - mallocで配列を確保するようにする
-   - 指定された画像を変換するようにする
    - 画像サイズをファイルから取得する用にする
 */
 
@@ -21,12 +21,22 @@ void output_mean(RGB rgb[]);                          // 赤・緑・青の平�
 void output_Y(RGB rgb[]);                             // 輝度Yを求め出力
 unsigned char convert_to_gray(RGB rgb[], int mode);   // グレイスケールに変換
 
-int main(void) {
+int main(int argc, char *argv[]) {
   FILE *image;    // ファイルポインタ
   RGB rgb[65536]; // RGB画像用の配列
 
-  // 画像データを開く
-  image = fopen("../../imgdata/pepper.ppm", "rb");
+  // コマンドライン引数の数が適切でない場合プログラムを終了
+  if (argc < 2) {
+    printf("ファイルのパスを入力してください。\n");
+    return -1;
+  }
+  else if (argc > 2) {
+    printf("指定できるファイルは1つです。\n");
+    return -1;
+  }
+
+  // 第一引数で指定された画像ファイルを開く
+  image = fopen(argv[1], "rb");
 
   // ファイルを開けなかった場合プログラムを終了
   if (image == NULL) {
@@ -44,19 +54,19 @@ int main(void) {
   fclose(image);
 
   // カラー画像の赤だけを取り出し、出力
-  output_red(&rgb);
+  output_red(rgb);
 
   // カラー画像の緑だけを取り出し、出力
-  output_green(&rgb);
+  output_green(rgb);
 
   // カラー画像の青だけを取り出し、出力
-  output_blue(&rgb);
+  output_blue(rgb);
 
   // 赤・緑。青の平均を求め、出力
-  output_mean(&rgb);
+  output_mean(rgb);
 
   // 輝度Yを求め、出力
-  output_Y(&rgb);
+  output_Y(rgb);
 
   return 0;
 }
