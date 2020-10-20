@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 typedef struct {
   unsigned char r;
@@ -11,30 +12,33 @@ void output_img(RGB rgb[], char filepath[]);
 unsigned char convert_to_gray(RGB rgb[], int mode);
 
 int main(int argc, char *argv[]) {
-  FILE *img;      // 元画像
-  RGB rgb[65536]; // RGB画像用の配列
+  FILE *img; // 元画像
+  RGB *rgb;  // RGB画像用
 
   // コマンドライン引数の数が適切でない場合プログラムを終了
   if (argc < 2) {
     printf("画像ファイルのパスを指定してください。\n");
-    return -1;
+    exit(1);
   }
   else if (argc > 2) {
     printf("指定できる画像ファイルは1つです。\n");
-    return -1;
+    exit(1);
   }
 
-  // 第一引数で指定された画像ファイルを読み込みモードで開く
-  img = fopen(argv[1], "rb");
-
-  // ファイルを開けなかった場合プログラムを終了
-  if (img == NULL) {
+  // 第一引数で指定された画像ファイルを開く(開けなかった場合プログラムを終了)
+  if ((img = fopen(argv[1], "rb")) == NULL) {
     printf("ファイルが開けませんでした。\n");
-    return -1;
+    exit(1);
   }
 
   // ヘッダの読み飛ばし
   jump_header(img);
+
+  // RGB画像用の配列を動的に確保(確保できなかった場合プログラムを終了)
+  if ((rgb = (RGB *)malloc(sizeof(RGB) * 65536)) == NULL) {
+    printf("メモリが確保できませんでした。\n");
+    exit(1);
+  }
 
   // 画像データの読み込み
   fread(rgb, sizeof(RGB), 65536, img);
@@ -57,6 +61,9 @@ int main(int argc, char *argv[]) {
   // 輝度Yを求め、抽出
   output_img(rgb, "y.pgm");
 
+  // メモリを解放
+  free(rgb);
+
   return 0;
 }
 
@@ -74,25 +81,28 @@ void jump_header(FILE *img) {
 
 // 画像をグレイスケールに変換し出力(rgb: RGB画像のデータ, filepath: 保存する画像のパス)
 void output_img(RGB rgb[], char filepath[]) {
-  int i;                     // イテレータ用
-  static int mode;           // 変換するモードを管理
-  FILE *img_proc;            // 変換後の画像
-  unsigned char gray[65536]; // グレイスケール変換後の画像データ
+  int i;               // イテレータ用
+  static int mode;     // 変換するモードを管理
+  FILE *img_proc;      // 変換後の画像
+  unsigned char *gray; // グレイスケール変換後の画像データ
 
   // モードを更新
   mode++;
 
-  // 書き込むファイルを開く
-  img_proc = fopen(filepath, "wb");
-
-  // ファイルを開なかった場合プログラムを終了
-  if (img_proc == NULL) {
+  // 書き込むファイルを開く(開なかった場合プログラムを終了)
+  if ((img_proc = fopen(filepath, "wb")) == NULL) {
     printf("ファイルが開けませんでした。\n");
-    return;
+    exit(1);
   }
 
   // ヘッダを書き込む
   fputs("P5\n256 256\n255\n", img_proc);
+
+  // 配列を動的に確保(確保できなかった場合プログラムを終了)
+  if ((gray = (unsigned char *)malloc(sizeof(unsigned char) * 65536)) == NULL) {
+    printf("メモリが確保できませんでした。\n");
+    exit(1);
+  }
 
   // モードを指定して画素ごとにグレイスケールに変換
   for (i=0; i<65536; i++) {
@@ -101,6 +111,9 @@ void output_img(RGB rgb[], char filepath[]) {
 
   // 画像データを書き込む
   fwrite(gray, sizeof(unsigned char), 65536, img_proc);
+
+  // メモリを解放
+  free(gray);
 
   // 画像ファイルを閉じる
   fclose(img_proc);
