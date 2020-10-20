@@ -31,7 +31,6 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-  // ヘッダの読み飛ばし
   jump_header(img);
 
   // RGB画像用の配列を動的に確保(確保できなかった場合プログラムを終了)
@@ -43,7 +42,6 @@ int main(int argc, char *argv[]) {
   // 画像データの読み込み
   fread(rgb, sizeof(RGB), 65536, img);
 
-  // 画像ファイルを閉じる
   fclose(img);
 
   // カラー画像から赤を抽出して出力
@@ -61,7 +59,6 @@ int main(int argc, char *argv[]) {
   // 輝度Yを求め、抽出
   output_img(rgb, "y.pgm");
 
-  // メモリを解放
   free(rgb);
 
   return 0;
@@ -81,7 +78,7 @@ void jump_header(FILE *img) {
 
 // 画像をグレイスケールに変換し出力(rgb: RGB画像のデータ, filepath: 保存する画像のパス)
 void output_img(RGB rgb[], char filepath[]) {
-  int i;               // イテレータ用
+  int i;
   static int mode;     // 変換するモードを管理
   FILE *img_proc;      // 変換後の画像
   unsigned char *gray; // グレイスケール変換後の画像データ
@@ -112,10 +109,8 @@ void output_img(RGB rgb[], char filepath[]) {
   // 画像データを書き込む
   fwrite(gray, sizeof(unsigned char), 65536, img_proc);
 
-  // メモリを解放
   free(gray);
 
-  // 画像ファイルを閉じる
   fclose(img_proc);
 }
 
@@ -148,6 +143,5 @@ unsigned char convert_to_gray(RGB rgb[], int mode) {
       break;
   }
 
-  // 画素データを返す
   return gray;
 }
