@@ -3,6 +3,7 @@
 
 void read_header(FILE *img, int *width, int *height);
 void minimize(unsigned char gray[], char filepath[], int width, int height);
+void enlarge(unsigned char gray[], char filepath[], int width, int height);
 
 int main(int argc, char *argv[]) {
   FILE *img;           // 元画像
@@ -39,6 +40,9 @@ int main(int argc, char *argv[]) {
 
   // 画像を縦・横それぞれ1/2倍に縮小
   minimize(gray, "minimize_50p.pgm", width, height);
+
+  // 画像を縦・横それぞれ2倍に拡大
+  enlarge(gray, "enlarge_200p.pgm", width, height);
 
   free(gray);
 
@@ -105,4 +109,33 @@ void minimize(unsigned char gray[], char filepath[], int width, int height) {
   free(gray_mini);
 
   fclose(img_mini);
+}
+
+void enlarge(unsigned char gray[], char filepath[], int width, int height) {
+  FILE *img_big;               // 拡大後の画像
+  unsigned char *gray_big;     // 拡大後のグレイスケール画像データ
+  int width_big = width * 2;   // 拡大後の横幅
+  int height_big = height * 2; // 拡大後の縦幅
+
+  // 書き込むファイルを開く(開なかった場合プログラムを終了)
+  if ((img_big = fopen(filepath, "wb")) == NULL) {
+    printf("ファイルが開けませんでした。\n");
+    exit(1);
+  }
+
+  // ヘッダを書き込む
+  fprintf(img_big, "P5\n%d %d\n255\n", width_big, height_big);
+
+  // 配列を動的に確保(確保できなかった場合プログラムを終了)
+  if ((gray_big = (unsigned char *)malloc(sizeof(unsigned char) * (width_big * height_big))) == NULL) {
+    printf("メモリが確保できませんでした。\n");
+    exit(1);
+  }
+
+  // 画像データを書き込む
+  fwrite(gray_big, sizeof(unsigned char), width_big * height_big, img_big);
+
+  free(gray_big);
+
+  fclose(img_big);
 }
