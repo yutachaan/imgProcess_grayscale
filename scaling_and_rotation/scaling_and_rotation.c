@@ -76,7 +76,7 @@ void minimize(unsigned char gray[], char filepath[], int width, int height) {
   unsigned char *gray_mini;     // 縮小後のグレイスケール画像データ
   int width_mini = width / 2;   // 縮小後の横幅
   int height_mini = height / 2; // 縮小後の縦幅
-  int pos;                      // 平均操作法で用いる左上の画素の位置
+  int pos;                      // 平均操作法で用いる元画像の左上の画素の位置
 
   // 書き込むファイルを開く(開なかった場合プログラムを終了)
   if ((img_mini = fopen(filepath, "wb")) == NULL) {
@@ -96,6 +96,7 @@ void minimize(unsigned char gray[], char filepath[], int width, int height) {
   // 平均操作法
   for (int i = 0; i < width_mini; i++) {
     for (int j = 0; j < height_mini; j++) {
+      // 位置を求める
       pos = 2 * (i * width + j);
 
       // 4画素の濃度平均を求めて代入
@@ -116,6 +117,8 @@ void enlarge(unsigned char gray[], char filepath[], int width, int height) {
   unsigned char *gray_big;     // 拡大後のグレイスケール画像データ
   int width_big = width * 2;   // 拡大後の横幅
   int height_big = height * 2; // 拡大後の縦幅
+  int pos;                     // 直線補間法で用いる元画像の左上の画素の位置
+  int pos_big;                 // 直線補間法で用いる拡大画像の左上の画素の位置
 
   // 書き込むファイルを開く(開なかった場合プログラムを終了)
   if ((img_big = fopen(filepath, "wb")) == NULL) {
@@ -130,6 +133,21 @@ void enlarge(unsigned char gray[], char filepath[], int width, int height) {
   if ((gray_big = (unsigned char *)malloc(sizeof(unsigned char) * (width_big * height_big))) == NULL) {
     printf("メモリが確保できませんでした。\n");
     exit(1);
+  }
+
+  // 直線補間法(右端、下端以外)
+  for (int i = 0; i < width - 1; i++) {
+    for (int j = 0; j < height - 1; j++) {
+      // 位置を求める
+      pos = i * width + j;
+      pos_big = 2 * (i * width_big + j);
+
+      // 新画素を隣接画素の直線近似により決定
+      gray_big[pos_big] = gray[pos];
+      gray_big[pos_big + 1] = (gray[pos] + gray[pos + 1]) / 2;
+      gray_big[pos_big + width_big] = (gray[pos] + gray[pos + width]) / 2;
+      gray_big[pos_big + width_big + 1] = (gray[pos] + gray[pos + width + 1]) / 2;
+    }
   }
 
   // 画像データを書き込む
