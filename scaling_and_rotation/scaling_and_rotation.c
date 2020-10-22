@@ -2,13 +2,12 @@
 #include <stdlib.h>
 
 void read_header(FILE *img, int *width, int *height);
+void minimize(unsigned char gray[], char filepath[], int width, int height);
 
 int main(int argc, char *argv[]) {
   FILE *img;           // 元画像
-  int width;           // 画像の横幅
-  int height;          // 画像の縦幅
-  int img_size;        // 画像のサイズ
-  unsigned char *gray; // グレイスケール変換後の画像データ
+  int width, height;   // 画像の横幅, 縦幅
+  unsigned char *gray; // グレイスケール画像データ
 
   // コマンドライン引数の数が適切でない場合プログラムを終了
   if (argc < 2) {
@@ -29,17 +28,17 @@ int main(int argc, char *argv[]) {
   // ヘッダを読み取り、画像の横幅と縦幅を代入
   read_header(img, &width, &height);
 
-  // 横幅と縦幅から画像のサイズを決定
-  img_size = width * height;
-
   // 配列を動的に確保(確保できなかった場合プログラムを終了)
-  if ((gray = (unsigned char *)malloc(sizeof(unsigned char) * img_size)) == NULL) {
+  if ((gray = (unsigned char *)malloc(sizeof(unsigned char) * (width * height))) == NULL) {
     printf("メモリが確保できませんでした。\n");
     exit(1);
   }
 
   // 画像データの読み込み
-  fread(gray, sizeof(unsigned char), img_size, img);
+  fread(gray, sizeof(unsigned char), width * height, img);
+
+  // 画像を縦・横それぞれ1/2倍に縮小
+  minimize(gray, "minimize_50p.pgm", width, height);
 
   free(gray);
 
@@ -66,4 +65,44 @@ void read_header(FILE *img, int *width, int *height) {
     // 次の行に移動
     i++;
   }
+}
+
+void minimize(unsigned char gray[], char filepath[], int width, int height) {
+  FILE *img_mini;               // 縮小後の画像
+  unsigned char *gray_mini;     // 縮小後のグレイスケール画像データ
+  int width_mini = width / 2;   // 縮小後の横幅
+  int height_mini = height / 2; // 縮小後の縦幅
+  int pos;                      // 平均操作法で用いる左上の画素の位置
+
+  // 書き込むファイルを開く(開なかった場合プログラムを終了)
+  if ((img_mini = fopen(filepath, "wb")) == NULL) {
+    printf("ファイルが開けませんでした。\n");
+    exit(1);
+  }
+
+  // ヘッダを書き込む
+  fprintf(img_mini, "P5\n%d %d\n255\n", width_mini, height_mini);
+
+  // 配列を動的に確保(確保できなかった場合プログラムを終了)
+  if ((gray_mini = (unsigned char *)malloc(sizeof(unsigned char) * (width_mini * height_mini))) == NULL) {
+    printf("メモリが確保できませんでした。\n");
+    exit(1);
+  }
+
+  // 平均操作法
+  for (int i = 0; i < width; i += 2) {
+    for (int j = 0; j < height; j += 2) {
+      pos = 2 * (i * width + j);
+
+      // 4画素の濃度平均を求めて代入
+      gray_mini[i * width_mini + j] = (gray[pos] + gray[pos + 1] + gray[pos + width] + gray[pos + width + 1]) / 4;
+    }
+  }
+
+  // 画像データを書き込む
+  fwrite(gray_mini, sizeof(unsigned char), width_mini * height_mini, img_mini);
+
+  free(gray_mini);
+
+  fclose(img_mini);
 }
