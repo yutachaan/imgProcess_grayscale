@@ -1,9 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
+
+// 度数をラジアンに変換するマクロ
+#define RADIAN(ARC) ((ARC) * 3.14159 / 180)
 
 void read_header(FILE *img, int *width, int *height);
 void minimize(unsigned char gray[], char filepath[], int width, int height);
 void enlarge(unsigned char gray[], char filepath[], int width, int height);
+void rotate(unsigned char gray[], char filepath[], int width, int height);
 
 int main(int argc, char *argv[]) {
   FILE *img;           // 元画像
@@ -44,6 +49,9 @@ int main(int argc, char *argv[]) {
   // 画像を縦・横それぞれ2倍に拡大
   enlarge(gray, "enlarge_200p.pgm", width, height);
 
+  // 画像を30度回転
+  rotate(gray, "rotate_30deg.pgm", width, height);
+
   free(gray);
 
   fclose(img);
@@ -71,6 +79,7 @@ void read_header(FILE *img, int *width, int *height) {
   }
 }
 
+// 画像を縦・横それぞれ1/2倍に縮小(gray: 元画像のデータ, filepath: 保存するファイルのパス, width, height: 元画像の横幅・縦幅)
 void minimize(unsigned char gray[], char filepath[], int width, int height) {
   int i, j;
   FILE *img_mini;               // 縮小後の画像
@@ -113,6 +122,7 @@ void minimize(unsigned char gray[], char filepath[], int width, int height) {
   fclose(img_mini);
 }
 
+// 画像を縦・横それぞれ2倍に拡大(gray: 元画像のデータ, filepath: 保存するファイルのパス, width, height: 元画像の横幅・縦幅)
 void enlarge(unsigned char gray[], char filepath[], int width, int height) {
   int i, j;
   FILE *img_big;               // 拡大後の画像
@@ -195,4 +205,43 @@ void enlarge(unsigned char gray[], char filepath[], int width, int height) {
   free(gray_big);
 
   fclose(img_big);
+}
+
+// 画像を30度回転(gray: 元画像のデータ, filepath: 保存するファイルのパス, width, height: 元画像の横幅・縦幅)
+void rotate(unsigned char gray[], char filepath[], int width, int height) {
+  FILE *img_rotate;            // 回転後の画像
+  unsigned char *gray_rotate;  // 回転後のグレイスケール画像データ
+  int width_rotate = width * 1.36;    // 回転後の横幅
+  int height_rotate = height * 1.36;  // 回転後の縦幅
+  int x_after, y_after;        // アフィン変換後の座標
+
+  // 書き込むファイルを開く(開なかった場合プログラムを終了)
+  if ((img_rotate = fopen(filepath, "wb")) == NULL) {
+    printf("ファイルが開けませんでした。\n");
+    exit(1);
+  }
+
+  // ヘッダを書き込む
+  fprintf(img_rotate, "P5\n%d %d\n255\n", width_rotate, height_rotate);
+
+  // 配列を動的に確保(確保できなかった場合プログラムを終了)
+  if ((gray_rotate = (unsigned char *)malloc(sizeof(unsigned char) * (width_rotate * height_rotate))) == NULL) {
+    printf("メモリが確保できませんでした。\n");
+    exit(1);
+  }
+
+  // アフィン変換
+  for (int i = 0; i < width - 1; i++) {
+    for (int j = 0; j < height - 1; j++) {
+      x_after = (int)(cos(RADIAN(30)) * i + sin(RADIAN(30)) * j);
+      y_after = (int)(cos(RADIAN(30)) * j - sin(RADIAN(30)) * i) + 128;
+      gray_rotate[y_after * width_rotate + x_after] = gray[j * width + i];
+    }
+  }
+
+  // 画像データを書き込む
+  fwrite(gray_rotate, sizeof(unsigned char), width_rotate * height_rotate, img_rotate);
+  free(gray_rotate);
+
+  fclose(img_rotate);
 }
