@@ -155,11 +155,9 @@ void enlarge(unsigned char gray[], char filepath[], int width, int height) {
   // 直線補間法(右端)
   i = width - 1;
   for (j = 0; j < height - 1; j++) {
-    // 位置を求める
     pos = j * width + i;
     pos_big = 2 * (j * width_big + i);
 
-    // 新画素を隣接画素の直線近似により決定
     gray_big[pos_big] = gray[pos];
     gray_big[pos_big + 1] = (gray[pos] + gray[pos - 1]) / 2;
     gray_big[pos_big + width_big] = (gray[pos] + gray[pos + width]) / 2;
@@ -169,11 +167,9 @@ void enlarge(unsigned char gray[], char filepath[], int width, int height) {
   // 直線補間法(下端)
   j = height - 1;
   for (i = 0; i < width - 1; i++) {
-    // 位置を求める
     pos = j * width + i;
     pos_big = 2 * (j * width_big + i);
 
-    // 新画素を隣接画素の直線近似により決定
     gray_big[pos_big] = gray[pos];
     gray_big[pos_big + 1] = (gray[pos] + gray[pos + 1]) / 2;
     gray_big[pos_big + width_big] = (gray[pos] + gray[pos - width]) / 2;
@@ -183,11 +179,10 @@ void enlarge(unsigned char gray[], char filepath[], int width, int height) {
   // 直線補間法(右下端)
   i = width - 1;
   j = height - 1;
-  { // 位置を求める
+  {
     pos = j * width + i;
     pos_big = 2 * (j * width_big + i);
 
-    // 新画素を隣接画素の直線近似により決定
     gray_big[pos_big] = gray[pos];
     gray_big[pos_big + 1] = (gray[pos] + gray[pos - 1]) / 2;
     gray_big[pos_big + width_big] = (gray[pos] + gray[pos - width]) / 2;
