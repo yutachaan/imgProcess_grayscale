@@ -72,6 +72,7 @@ void read_header(FILE *img, int *width, int *height) {
 }
 
 void minimize(unsigned char gray[], char filepath[], int width, int height) {
+  int i, j;
   FILE *img_mini;               // 縮小後の画像
   unsigned char *gray_mini;     // 縮小後のグレイスケール画像データ
   int width_mini = width / 2;   // 縮小後の横幅
@@ -94,13 +95,13 @@ void minimize(unsigned char gray[], char filepath[], int width, int height) {
   }
 
   // 平均操作法
-  for (int i = 0; i < width_mini; i++) {
-    for (int j = 0; j < height_mini; j++) {
+  for (i = 0; i < width_mini; i++) {
+    for (j = 0; j < height_mini; j++) {
       // 位置を求める
-      pos = 2 * (i * width + j);
+      pos = 2 * (j * width + i);
 
       // 4画素の濃度平均を求めて代入
-      gray_mini[i * width_mini + j] = (gray[pos] + gray[pos + 1] + gray[pos + width] + gray[pos + width + 1]) / 4;
+      gray_mini[j * width_mini + i] = (gray[pos] + gray[pos + 1] + gray[pos + width] + gray[pos + width + 1]) / 4;
     }
   }
 
@@ -113,6 +114,7 @@ void minimize(unsigned char gray[], char filepath[], int width, int height) {
 }
 
 void enlarge(unsigned char gray[], char filepath[], int width, int height) {
+  int i, j;
   FILE *img_big;               // 拡大後の画像
   unsigned char *gray_big;     // 拡大後のグレイスケール画像データ
   int width_big = width * 2;   // 拡大後の横幅
@@ -136,11 +138,11 @@ void enlarge(unsigned char gray[], char filepath[], int width, int height) {
   }
 
   // 直線補間法(右端、下端以外)
-  for (int i = 0; i < width - 1; i++) {
-    for (int j = 0; j < height - 1; j++) {
+  for (i = 0; i < width - 1; i++) {
+    for (j = 0; j < height - 1; j++) {
       // 位置を求める
-      pos = i * width + j;
-      pos_big = 2 * (i * width_big + j);
+      pos = j * width + i;
+      pos_big = 2 * (j * width_big + i);
 
       // 新画素を隣接画素の直線近似により決定
       gray_big[pos_big] = gray[pos];
@@ -148,6 +150,48 @@ void enlarge(unsigned char gray[], char filepath[], int width, int height) {
       gray_big[pos_big + width_big] = (gray[pos] + gray[pos + width]) / 2;
       gray_big[pos_big + width_big + 1] = (gray[pos] + gray[pos + width + 1]) / 2;
     }
+  }
+
+  // 直線補間法(右端)
+  i = width - 1;
+  for (j = 0; j < height - 1; j++) {
+    // 位置を求める
+    pos = j * width + i;
+    pos_big = 2 * (j * width_big + i);
+
+    // 新画素を隣接画素の直線近似により決定
+    gray_big[pos_big] = gray[pos];
+    gray_big[pos_big + 1] = (gray[pos] + gray[pos - 1]) / 2;
+    gray_big[pos_big + width_big] = (gray[pos] + gray[pos + width]) / 2;
+    gray_big[pos_big + width_big + 1] = (gray[pos] + gray[pos + width - 1]) / 2;
+  }
+
+  // 直線補間法(下端)
+  j = height - 1;
+  for (i = 0; i < width - 1; i++) {
+    // 位置を求める
+    pos = j * width + i;
+    pos_big = 2 * (j * width_big + i);
+
+    // 新画素を隣接画素の直線近似により決定
+    gray_big[pos_big] = gray[pos];
+    gray_big[pos_big + 1] = (gray[pos] + gray[pos + 1]) / 2;
+    gray_big[pos_big + width_big] = (gray[pos] + gray[pos - width]) / 2;
+    gray_big[pos_big + width_big + 1] = (gray[pos] + gray[pos - width + 1]) / 2;
+  }
+
+  // 直線補間法(右下端)
+  i = width - 1;
+  j = height - 1;
+  { // 位置を求める
+    pos = j * width + i;
+    pos_big = 2 * (j * width_big + i);
+
+    // 新画素を隣接画素の直線近似により決定
+    gray_big[pos_big] = gray[pos];
+    gray_big[pos_big + 1] = (gray[pos] + gray[pos - 1]) / 2;
+    gray_big[pos_big + width_big] = (gray[pos] + gray[pos - width]) / 2;
+    gray_big[pos_big + width_big + 1] = (gray[pos] + gray[pos - width - 1]) / 2;
   }
 
   // 画像データを書き込む
