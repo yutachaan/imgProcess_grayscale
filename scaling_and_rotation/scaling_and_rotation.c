@@ -211,8 +211,8 @@ void enlarge(unsigned char gray[], char filepath[], int width, int height) {
 void rotate(unsigned char gray[], char filepath[], int width, int height) {
   FILE *img_rotate;                                           // 回転後の画像
   unsigned char *gray_rotate;                                 // 回転後のグレイスケール画像データ
-  int width_rotate  = width * (sin(RAD(30)) + cos(RAD(30)));  // 回転後の横幅
-  int height_rotate = height * (sin(RAD(30)) + cos(RAD(30))); // 回転後の縦幅
+  int width_rotate  = width * (sin(RAD(30)) + cos(RAD(30)));  // 回転後の画像全体の横幅
+  int height_rotate = height * (sin(RAD(30)) + cos(RAD(30))); // 回転後の画像全体の縦幅
   int x_after, y_after;                                       // アフィン変換後の座標
 
   // 書き込むファイルを開く(開なかった場合プログラムを終了)
@@ -231,11 +231,11 @@ void rotate(unsigned char gray[], char filepath[], int width, int height) {
   }
 
   // アフィン変換
-  for (int i = 0; i < width - 1; i++) {
-    for (int j = 0; j < height - 1; j++) {
-      // 回転後のx座標とy座標を求める
+  for (int i = 0; i < width; i++) {
+    for (int j = 0; j < height; j++) {
+      // 回転+平行移動後のx座標とy座標を求める
       x_after = (int)(cos(RAD(30)) * i + sin(RAD(30)) * j);
-      y_after = (int)(cos(RAD(30)) * j - sin(RAD(30)) * i) + 128;
+      y_after = (int)(cos(RAD(30)) * j - sin(RAD(30)) * i) + (width * sin(RAD(30)));
 
       // 回転後の座標に回転前の座標のピクセルの値を代入
       gray_rotate[y_after * width_rotate + x_after] = gray[j * width + i];
