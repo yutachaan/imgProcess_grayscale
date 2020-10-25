@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 void read_header(FILE *img, int *width, int *height, int *maxdepth);
-void output_histgram(unsigned char gray[], int img_size, int maxdepth);
+void output_histogram(unsigned char gray[], int img_size, int maxdepth);
 
 int main(int argc, char *argv[]) {
   FILE *img;                   // 元画像
@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
   fread(gray, sizeof(unsigned char), img_size, img);
 
   // 濃度度数分布表とヒストグラムを出力
-  output_histgram(gray, img_size, maxdepth);
+  output_histogram(gray, img_size, maxdepth);
 
   free(gray);
 
@@ -74,6 +74,6 @@ void read_header(FILE *img, int *width, int *height, int *maxdepth) {
 }
 
 // 濃度度数分布表とヒストグラムを出力(gray: 画像のデータ, img_size: 画像のサイズ, maxdepth: 最大階調値)
-void output_histgram(unsigned char gray[], int img_size, int maxdepth) {
+void output_histogram(unsigned char gray[], int img_size, int maxdepth) {
   printf("%d %d\n", img_size, maxdepth);
 }
