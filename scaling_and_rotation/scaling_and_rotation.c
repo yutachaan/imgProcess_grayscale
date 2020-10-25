@@ -31,11 +31,11 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-  // ヘッダを読み取り、画像の横幅と縦幅を代入
+  // ヘッダを読み取り、画像の横幅と縦幅を取得
   read_header(img, &width, &height);
 
   // 配列を動的に確保(確保できなかった場合プログラムを終了)
-  if ((gray = (unsigned char *)malloc(sizeof(unsigned char) * (width * height))) == NULL) {
+  if ((gray = (unsigned char *)malloc(sizeof(unsigned char) * width * height)) == NULL) {
     printf("メモリが確保できませんでした。\n");
     exit(1);
   }
@@ -142,7 +142,7 @@ void enlarge(unsigned char gray[], char filepath[], int width, int height) {
   fprintf(img_big, "P5\n%d %d\n255\n", width_big, height_big);
 
   // 配列を動的に確保(確保できなかった場合プログラムを終了)
-  if ((gray_big = (unsigned char *)malloc(sizeof(unsigned char) * (width_big * height_big))) == NULL) {
+  if ((gray_big = (unsigned char *)malloc(sizeof(unsigned char) * width_big * height_big)) == NULL) {
     printf("メモリが確保できませんでした。\n");
     exit(1);
   }
@@ -209,23 +209,23 @@ void enlarge(unsigned char gray[], char filepath[], int width, int height) {
 
 // 画像を30度回転(gray: 元画像のデータ, filepath: 保存するファイルのパス, width, height: 元画像の横幅・縦幅)
 void rotate(unsigned char gray[], char filepath[], int width, int height) {
-  FILE *img_rotate;                                           // 回転後の画像
-  unsigned char *gray_rotate;                                 // 回転後のグレイスケール画像データ
-  int width_rotate  = width * (sin(RAD(30)) + cos(RAD(30)));  // 回転後の画像全体の横幅
-  int height_rotate = height * (sin(RAD(30)) + cos(RAD(30))); // 回転後の画像全体の縦幅
-  int x_after, y_after;                                       // アフィン変換後の座標
+  FILE *img_rot;                                           // 回転後の画像
+  unsigned char *gray_rot;                                 // 回転後のグレイスケール画像データ
+  int width_rot  = width * (sin(RAD(30)) + cos(RAD(30)));  // 回転後の画像全体の横幅
+  int height_rot = height * (sin(RAD(30)) + cos(RAD(30))); // 回転後の画像全体の縦幅
+  int x_after, y_after;                                    // アフィン変換後の座標
 
   // 書き込むファイルを開く(開なかった場合プログラムを終了)
-  if ((img_rotate = fopen(filepath, "wb")) == NULL) {
+  if ((img_rot = fopen(filepath, "wb")) == NULL) {
     printf("ファイルが開けませんでした。\n");
     exit(1);
   }
 
   // ヘッダを書き込む
-  fprintf(img_rotate, "P5\n%d %d\n255\n", width_rotate, height_rotate);
+  fprintf(img_rot, "P5\n%d %d\n255\n", width_rot, height_rot);
 
   // 配列を動的に確保(確保できなかった場合プログラムを終了)
-  if ((gray_rotate = (unsigned char *)malloc(sizeof(unsigned char) * (width_rotate * height_rotate))) == NULL) {
+  if ((gray_rot = (unsigned char *)malloc(sizeof(unsigned char) * width_rot * height_rot)) == NULL) {
     printf("メモリが確保できませんでした。\n");
     exit(1);
   }
@@ -238,14 +238,14 @@ void rotate(unsigned char gray[], char filepath[], int width, int height) {
       y_after = (int)(cos(RAD(30)) * j - sin(RAD(30)) * i) + (width * sin(RAD(30)));
 
       // 回転後の座標に回転前の座標のピクセルの値を代入
-      gray_rotate[y_after * width_rotate + x_after] = gray[j * width + i];
+      gray_rot[y_after * width_rot + x_after] = gray[j * width + i];
     }
   }
 
   // 画像データを書き込む
-  fwrite(gray_rotate, sizeof(unsigned char), width_rotate * height_rotate, img_rotate);
+  fwrite(gray_rot, sizeof(unsigned char), width_rot * height_rot, img_rot);
 
-  free(gray_rotate);
+  free(gray_rot);
 
-  fclose(img_rotate);
+  fclose(img_rot);
 }
