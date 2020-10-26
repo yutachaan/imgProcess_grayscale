@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 void read_header(FILE *img, int *width, int *height, int *maxdepth);
-void output_histogram(unsigned char gray[], int img_size, int maxdepth);
+void output_table(unsigned char gray[], int img_size, int maxdepth);
 
 int main(int argc, char *argv[]) {
   FILE *img;                   // 元画像
@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
   fread(gray, sizeof(unsigned char), img_size, img);
 
   // 濃度度数分布表とヒストグラムを出力
-  output_histogram(gray, img_size, maxdepth);
+  output_table(gray, img_size, maxdepth);
 
   free(gray);
 
@@ -73,7 +73,34 @@ void read_header(FILE *img, int *width, int *height, int *maxdepth) {
   }
 }
 
-// 濃度度数分布表とヒストグラムを出力(gray: 画像のデータ, img_size: 画像のサイズ, maxdepth: 最大階調値)
-void output_histogram(unsigned char gray[], int img_size, int maxdepth) {
-  printf("%d %d\n", img_size, maxdepth);
+// 濃度度数分布表を出力(gray: 画像のデータ, img_size: 画像のサイズ, maxdepth: 最大階調値)
+void output_table(unsigned char gray[], int img_size, int maxdepth) {
+  FILE *table; // 度数分布表を出力するファイル
+  int *freq;   // 頻度を保存するための配列
+
+  // 配列を動的に確保(確保できなかった場合プログラムを終了)
+  if ((freq = (int *)malloc(sizeof(int) * maxdepth)) == NULL) {
+    printf("メモリが確保できませんでした。\n");
+    exit(1);
+  }
+
+  // 各濃度値の頻度を記録
+  for (int i = 0; i < img_size; i++) {
+    freq[gray[i]]++;
+  }
+
+  // 書き込むファイルを開く(開けなかった場合プログラムを終了)
+  if ((table = fopen("freq_table.csv", "wb")) == NULL) {
+    printf("ファイルが開けませんでした。\n");
+    exit(1);
+  }
+
+  // 濃度度数分布表をcsvファイルに出力
+  for (int i = 0; i <= maxdepth; i++) {
+    fprintf(table, "%d,%d\n", i, freq[i]);
+  }
+
+  free(freq);
+
+  fclose(table);
 }
