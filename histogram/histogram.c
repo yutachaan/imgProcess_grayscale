@@ -3,6 +3,7 @@
 
 void read_header(FILE *img, int *width, int *height, int *maxdepth);
 void output_table(unsigned char gray[], int freq[], int img_size, int maxdepth);
+void smooth_histogram(int freq[], int img_size, int maxdepth);
 
 int main(int argc, char *argv[]) {
   FILE *img;                   // 元画像
@@ -50,6 +51,9 @@ int main(int argc, char *argv[]) {
   // 濃度度数分布表を出力
   output_table(gray, freq, img_size, maxdepth);
 
+  // ヒストグラム平滑化
+  smooth_histogram(freq, img_size, maxdepth);
+
   free(freq);
 
   free(gray);
@@ -82,7 +86,7 @@ void read_header(FILE *img, int *width, int *height, int *maxdepth) {
   }
 }
 
-// 濃度度数分布表を出力(gray: 画像のデータ, img_size: 画像のサイズ, maxdepth: 最大階調値, freq: 頻度を保存する配列)
+// 濃度度数分布表を出力(gray: 画像のデータ, freq: 頻度を保存する配列, img_size: 画像のサイズ, maxdepth: 最大階調値)
 void output_table(unsigned char gray[], int freq[], int img_size, int maxdepth) {
   FILE *table; // 度数分布表を出力するファイル
 
@@ -103,4 +107,46 @@ void output_table(unsigned char gray[], int freq[], int img_size, int maxdepth) 
   }
 
   fclose(table);
+}
+
+// ヒストグラム平滑化(freq: 頻度, img_size: 画像サイズ)
+void smooth_histogram(int freq[], int img_size, int maxdepth) {
+  int depth_goal = 64;                   // 目標階調数
+  int freq_goal = img_size / depth_goal; // 頻度目標値
+  int cum = 0;                           // 蓄積頻度
+  int cum_freq[maxdepth];                // 蓄積頻度の配列
+  int diff_goal[maxdepth];               // 目標頻度と蓄積頻度の差の絶対値の配列
+  int cur_thick[maxdepth];               // 補正濃度の配列
+
+  // 蓄積頻度の列と、目標頻度と蓄積頻度の差の絶対値の列を作成
+  for (int i = 0; i <= maxdepth; i++) {
+    // 蓄積頻度
+    cum += freq[i];
+    cum_freq[i] = cum;
+
+    // 目標頻度と蓄積頻度の差の絶対値
+    diff_goal[i] = abs(freq_goal - cum_freq[i]);
+  }
+
+  // 補正濃度の配列の値を全て0で初期化
+  for (int i = 0; i <= maxdepth; i++) {
+    cur_thick[i] = 0;
+  }
+
+  // 濃度変換表作成
+  for (int i = 1; i <= maxdepth; i++) {
+    if (diff_goal[i] < diff_goal[i - 1]) {
+      cum_freq[i] = 0;
+      cur_thick[i] = cur_thick[i - 1] + 1;
+      if (cur_thick[i] >= depth_goal) cur_thick[i] = depth_goal - 1;
+    }
+    else {
+      cur_thick[i] = cur_thick[i - 1];
+    }
+    cum_freq[i] += freq[i];
+  }
+
+  for (int i = 0; i <= maxdepth; i++) {
+    printf("%3d  %4d  %5d  %5d  %2d\n", i, freq[i], cum_freq[i], diff_goal[i], cur_thick[i]);
+  }
 }
