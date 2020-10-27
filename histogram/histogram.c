@@ -2,13 +2,14 @@
 #include <stdlib.h>
 
 void read_header(FILE *img, int *width, int *height, int *maxdepth);
-void output_table(unsigned char gray[], int img_size, int maxdepth);
+void output_table(unsigned char gray[], int img_size, int maxdepth, int freq[]);
 
 int main(int argc, char *argv[]) {
   FILE *img;                   // 元画像
   int width, height, maxdepth; // 画像の横幅, 縦幅, 最大階調値
   int img_size;                // 画像サイズ
   unsigned char *gray;         // グレイスケール画像データ
+  int *freq;                   // 頻度を保存するための配列
 
   // コマンドライン引数の数が適切でない場合プログラムを終了
   if (argc < 2) {
@@ -40,8 +41,16 @@ int main(int argc, char *argv[]) {
   // 画像データの読み込み
   fread(gray, sizeof(unsigned char), img_size, img);
 
-  // 濃度度数分布表とヒストグラムを出力
-  output_table(gray, img_size, maxdepth);
+  // 配列を動的に確保(確保できなかった場合プログラムを終了)
+  if ((freq = (int *)malloc(sizeof(int) * maxdepth)) == NULL) {
+    printf("メモリが確保できませんでした。\n");
+    exit(1);
+  }
+
+  // 濃度度数分布表を出力
+  output_table(gray, img_size, maxdepth, freq);
+
+  free(freq);
 
   free(gray);
 
@@ -73,16 +82,9 @@ void read_header(FILE *img, int *width, int *height, int *maxdepth) {
   }
 }
 
-// 濃度度数分布表を出力(gray: 画像のデータ, img_size: 画像のサイズ, maxdepth: 最大階調値)
-void output_table(unsigned char gray[], int img_size, int maxdepth) {
+// 濃度度数分布表を出力(gray: 画像のデータ, img_size: 画像のサイズ, maxdepth: 最大階調値, freq: 頻度を保存する配列)
+void output_table(unsigned char gray[], int img_size, int maxdepth, int freq[]) {
   FILE *table; // 度数分布表を出力するファイル
-  int *freq;   // 頻度を保存するための配列
-
-  // 配列を動的に確保(確保できなかった場合プログラムを終了)
-  if ((freq = (int *)malloc(sizeof(int) * maxdepth)) == NULL) {
-    printf("メモリが確保できませんでした。\n");
-    exit(1);
-  }
 
   // 各濃度値の頻度を記録
   for (int i = 0; i < img_size; i++) {
@@ -99,8 +101,6 @@ void output_table(unsigned char gray[], int img_size, int maxdepth) {
   for (int i = 0; i <= maxdepth; i++) {
     fprintf(table, "%d,%d\n", i, freq[i]);
   }
-
-  free(freq);
 
   fclose(table);
 }
