@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 void read_header(FILE *img, int *width, int *height, int *maxdepth);
-void output_table(unsigned char gray[], int img_size, int maxdepth, int freq[]);
+void output_table(unsigned char gray[], int freq[], int img_size, int maxdepth);
 
 int main(int argc, char *argv[]) {
   FILE *img;                   // 元画像
@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
   }
 
   // 濃度度数分布表を出力
-  output_table(gray, img_size, maxdepth, freq);
+  output_table(gray, freq, img_size, maxdepth);
 
   free(freq);
 
@@ -83,7 +83,7 @@ void read_header(FILE *img, int *width, int *height, int *maxdepth) {
 }
 
 // 濃度度数分布表を出力(gray: 画像のデータ, img_size: 画像のサイズ, maxdepth: 最大階調値, freq: 頻度を保存する配列)
-void output_table(unsigned char gray[], int img_size, int maxdepth, int freq[]) {
+void output_table(unsigned char gray[], int freq[], int img_size, int maxdepth) {
   FILE *table; // 度数分布表を出力するファイル
 
   // 各濃度値の頻度を記録
