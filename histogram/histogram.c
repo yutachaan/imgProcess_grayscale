@@ -131,13 +131,13 @@ void smooth_histogram(unsigned char gray[], int freq[], int width, int height, i
     exit(1);
   }
 
-  // 濃度変換表で変換した値を代入
-  for (int i = 0; i < width * height; i++) {
-    gray_smooth[i] = cur_thick[gray[i]];
-  }
-
   // ヘッダを書き込む
   fprintf(img_smooth, "P5\n%d %d\n%d\n", width, height, depth_goal - 1);
+
+  // 濃度変換表で変換した値を代入
+  for (int i = 0; i < width * height; i++) {
+    gray_smooth[i] = cur_thick[gray[i]] * ((maxdepth + 1) / depth_goal);
+  }
 
   // 画像データを書き込む
   fwrite(gray_smooth, sizeof(char), width * height, img_smooth);
