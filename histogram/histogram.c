@@ -8,7 +8,6 @@ void smooth_histogram(unsigned char gray[], int freq[], int width, int height, i
 int main(int argc, char *argv[]) {
   FILE *img;                   // 元画像
   int width, height, maxdepth; // 画像の横幅, 縦幅, 最大階調値
-  int img_size;                // 画像サイズ
   unsigned char *gray;         // グレイスケール画像データ
   int *freq;                   // 頻度を保存するための配列
 

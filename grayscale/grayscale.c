@@ -8,25 +8,16 @@ typedef struct {
 } RGB;
 
 void read_header(FILE *img, int *width, int *height);
-void convert_img_to_gray(RGB rgb[], char filepath[], int img_size);
+void convert_img_to_gray(RGB rgb[], char filepath[], int width, int height);
 unsigned char convert_pixel_to_gray(RGB rgb[], int mode);
 
 int main(int argc, char *argv[]) {
-  FILE *img;    // 元画像
-  int width;    // 画像の横幅
-  int height;   // 画像の縦幅
-  int img_size; // 画像のサイズ
-  RGB *rgb;     // RGB画像用
+  FILE *img;                   // 元画像
+  int width, height, img_size; // 画像の横幅、縦幅、サイズ
+  RGB *rgb;                    // RGB画像用
 
   // コマンドライン引数の数が適切でない場合プログラムを終了
-  if (argc < 2) {
-    printf("画像ファイルのパスを指定してください。\n");
-    exit(1);
-  }
-  else if (argc > 2) {
-    printf("指定できる画像ファイルは1つです。\n");
-    exit(1);
-  }
+  if (argc != 2) exit(1);
 
   // 第一引数で指定された画像ファイルを開く(開けなかった場合プログラムを終了)
   if ((img = fopen(argv[1], "rb")) == NULL) {
@@ -37,47 +28,43 @@ int main(int argc, char *argv[]) {
   // ヘッダを読み取り、画像の横幅と縦幅を代入
   read_header(img, &width, &height);
 
-  // 横幅と縦幅から画像のサイズを決定
-  img_size = width * height;
-
   // RGB画像用の配列を動的に確保(確保できなかった場合プログラムを終了)
-  if ((rgb = (RGB *)malloc(sizeof(RGB) * img_size)) == NULL) {
+  if ((rgb = (RGB *)malloc(sizeof(RGB) * width * height)) == NULL) {
     printf("メモリが確保できませんでした。\n");
     exit(1);
   }
 
   // 画像データの読み込み
-  fread(rgb, sizeof(RGB), img_size, img);
+  fread(rgb, sizeof(RGB), width * height, img);
 
   fclose(img);
 
   // カラー画像から赤を抽出して出力
-  convert_img_to_gray(rgb, "red.pgm", img_size);
+  convert_img_to_gray(rgb, "red.pgm", width, height);
 
   // カラー画像から緑を抽出して出力
-  convert_img_to_gray(rgb, "green.pgm", img_size);
+  convert_img_to_gray(rgb, "green.pgm", width, height);
 
   // カラー画像から青を抽出して出力
-  convert_img_to_gray(rgb, "blue.pgm", img_size);
+  convert_img_to_gray(rgb, "blue.pgm", width, height);
 
   // 赤・緑・青の平均値を求め、抽出
-  convert_img_to_gray(rgb, "mean.pgm", img_size);
+  convert_img_to_gray(rgb, "mean.pgm", width, height);
 
   // 輝度Yを求め、抽出
-  convert_img_to_gray(rgb, "y.pgm", img_size);
+  convert_img_to_gray(rgb, "y.pgm", width, height);
 
   free(rgb);
 
   return 0;
 }
 
-// ヘッダの情報を読み取る(img: 読み込む画像のファイルポインタ, width: 画像の横幅保存用, height: 画像の縦幅保存用)
+// ヘッダの情報を読み取る(img: 読み込む画像のファイルポインタ, width: 画像の横幅, height: 画像の縦幅)
 void read_header(FILE *img, int *width, int *height) {
   int i;
-  char buf[256]; // ヘッダ読み込み時のバッファ
+  char buf[256];
 
   while (i < 3) {
-    // 1行読み取る
     fgets(buf, sizeof(buf), img);
 
     // コメントの場合読み飛ばす
@@ -86,16 +73,15 @@ void read_header(FILE *img, int *width, int *height) {
     // 画像の横幅と縦幅を読み取る
     if (i == 1) sscanf(buf, "%d %d", width, height);
 
-    // 次の行に移動
     i++;
   }
 }
 
-// 画像をグレイスケールに変換し出力(rgb: RGB画像のデータ, filepath: 保存する画像のパス)
-void convert_img_to_gray(RGB rgb[], char filepath[], int img_size) {
-  static int mode;     // 変換するモードを管理
-  FILE *img_proc;      // 変換後の画像
-  unsigned char *gray; // グレイスケール変換後の画像データ
+// 画像をグレイスケールに変換し出力(rgb: RGB画像のデータ, filepath: 保存する画像のパス, width: 画像の横幅, height: 画像の高さ)
+void convert_img_to_gray(RGB rgb[], char filepath[], int width, int height) {
+  FILE *img_proc;                     // 変換後の画像
+  unsigned char gray[width * height]; // グレイスケール変換後の画像データ
+  static int mode;                    // 変換するモードを管理
 
   // モードを更新
   mode++;
@@ -107,23 +93,15 @@ void convert_img_to_gray(RGB rgb[], char filepath[], int img_size) {
   }
 
   // ヘッダを書き込む
-  fputs("P5\n256 256\n255\n", img_proc);
-
-  // 配列を動的に確保(確保できなかった場合プログラムを終了)
-  if ((gray = (unsigned char *)malloc(sizeof(unsigned char) * img_size)) == NULL) {
-    printf("メモリが確保できませんでした。\n");
-    exit(1);
-  }
+  fprintf(img_proc, "P5\n%d %d\n255\n", width, height);
 
   // モードを指定して画素ごとにグレイスケールに変換
-  for (int i = 0; i < img_size; i++) {
+  for (int i = 0; i < width * height; i++) {
     gray[i] = convert_pixel_to_gray(&rgb[i], mode);
   }
 
   // 画像データを書き込む
-  fwrite(gray, sizeof(unsigned char), img_size, img_proc);
-
-  free(gray);
+  fwrite(gray, sizeof(unsigned char), width * height, img_proc);
 
   fclose(img_proc);
 }
