@@ -86,6 +86,11 @@ void convert_img_to_gray(RGB rgb[], char filepath[], int width, int height) {
   // モードを更新
   mode++;
 
+  // モードを指定して画素ごとにグレイスケールに変換
+  for (int i = 0; i < width * height; i++) {
+    gray[i] = convert_pixel_to_gray(&rgb[i], mode);
+  }
+
   // 書き込むファイルを開く(開なかった場合プログラムを終了)
   if ((img_proc = fopen(filepath, "wb")) == NULL) {
     printf("ファイルが開けませんでした。\n");
@@ -94,11 +99,6 @@ void convert_img_to_gray(RGB rgb[], char filepath[], int width, int height) {
 
   // ヘッダを書き込む
   fprintf(img_proc, "P5\n%d %d\n255\n", width, height);
-
-  // モードを指定して画素ごとにグレイスケールに変換
-  for (int i = 0; i < width * height; i++) {
-    gray[i] = convert_pixel_to_gray(&rgb[i], mode);
-  }
 
   // 画像データを書き込む
   fwrite(gray, sizeof(unsigned char), width * height, img_proc);

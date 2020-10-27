@@ -32,6 +32,8 @@ int main(int argc, char *argv[]) {
   // 画像データの読み込み
   fread(gray, sizeof(unsigned char), width * height, img);
 
+  fclose(img);
+
   // 配列を動的に確保(確保できなかった場合プログラムを終了)
   if ((freq = (int *)malloc(sizeof(int) * maxdepth)) == NULL) {
     printf("メモリが確保できませんでした。\n");
@@ -47,8 +49,6 @@ int main(int argc, char *argv[]) {
   free(freq);
 
   free(gray);
-
-  fclose(img);
 
   return 0;
 }
@@ -125,6 +125,11 @@ void smooth_histogram(unsigned char gray[], int freq[], int width, int height, i
     cum_freq += freq[i];                                             // 蓄積頻度に現在の濃度の頻度を加算
   }
 
+  // 濃度変換表で変換した値を代入
+  for (int i = 0; i < width * height; i++) {
+    gray_smooth[i] = cur_thick[gray[i]] * ((maxdepth + 1) / depth_goal);
+  }
+
   // 書き込むファイルを開く(開けなかった場合プログラムを終了)
   if ((img_smooth = fopen("smooth_histo.pgm", "wb")) == NULL) {
     printf("ファイルが開けませんでした。\n");
@@ -133,11 +138,6 @@ void smooth_histogram(unsigned char gray[], int freq[], int width, int height, i
 
   // ヘッダを書き込む
   fprintf(img_smooth, "P5\n%d %d\n%d\n", width, height, maxdepth);
-
-  // 濃度変換表で変換した値を代入
-  for (int i = 0; i < width * height; i++) {
-    gray_smooth[i] = cur_thick[gray[i]] * ((maxdepth + 1) / depth_goal);
-  }
 
   // 画像データを書き込む
   fwrite(gray_smooth, sizeof(char), width * height, img_smooth);
