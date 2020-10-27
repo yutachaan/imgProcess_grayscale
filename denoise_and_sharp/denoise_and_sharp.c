@@ -69,6 +69,7 @@ void median_filter(unsigned char gray[], int width, int height) {
   FILE *img_denoise;                          // ノイズ除去後のファイル
   unsigned char gray_denoise[width * height]; // ノイズ除去後の画像データ
   int neighbor[9];                            // 近傍画素の値
+  int pos;                                    // 注目画素の座標
 
   // 書き込むファイルを開く(開けなかった場合プログラムを終了)
   if ((img_denoise = fopen("denoise.pgm", "wb")) == NULL) {
@@ -79,19 +80,25 @@ void median_filter(unsigned char gray[], int width, int height) {
   // 元画像にメディアンフィルタを適用してノイズ除去
   for (int i = 1; i < width - 1; i++) {
     for (int j = 1; j < height - 1; j++) {
-      // 近傍がその値を代入
-      neighbor[0] = gray[i - width - 1];
-      neighbor[1] = gray[i - width];
-      neighbor[2] = gray[i - width + 1];
-      neighbor[3] = gray[i - 1];
-      neighbor[4] = gray[i];
-      neighbor[5] = gray[i + 1];
-      neighbor[6] = gray[i + width - 1];
-      neighbor[7] = gray[i + width];
-      neighbor[8] = gray[i + width + 1];
+      // 注目画素の座標を求める
+      pos = j * width - i;
 
-      // ソート
+      // 近傍画素の値を代入
+      neighbor[0] = gray[pos - width - 1];
+      neighbor[1] = gray[pos - width];
+      neighbor[2] = gray[pos - width + 1];
+      neighbor[3] = gray[pos - 1];
+      neighbor[4] = gray[pos];
+      neighbor[5] = gray[pos + 1];
+      neighbor[6] = gray[pos + width - 1];
+      neighbor[7] = gray[pos + width];
+      neighbor[8] = gray[pos + width + 1];
+
+      // 近傍画素の値をソート
       qsort(neighbor, sizeof(neighbor) / sizeof(neighbor[0]), sizeof(int), cmpnum);
+
+      // 近傍画素の中央値を新しい値として使用
+      gray_denoise[pos] = neighbor[4];
     }
   }
 
