@@ -132,7 +132,7 @@ void smooth_histogram(unsigned char gray[], int freq[], int width, int height, i
   }
 
   // ヘッダを書き込む
-  fprintf(img_smooth, "P5\n%d %d\n%d\n", width, height, depth_goal - 1);
+  fprintf(img_smooth, "P5\n%d %d\n%d\n", width, height, maxdepth);
 
   // 濃度変換表で変換した値を代入
   for (int i = 0; i < width * height; i++) {
