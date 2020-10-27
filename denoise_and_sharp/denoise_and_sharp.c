@@ -1,7 +1,14 @@
+/* 参考: モノづくりC言語塾 「C言語 qsort関数の使い方【構造体データも並べ替えができる】」
+   https://monozukuri-c.com/langc-funclist-qsort/
+   (閲覧日: 2020-10-27)
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 
 void read_header(FILE *img, int *width, int *height);
+void median_filter(unsigned char gray[], int width, int height);
+int cmpnum(const void * n1, const void * n2);
 
 int main(int argc, char *argv[]) {
   FILE *img;            // 元画像
@@ -29,6 +36,9 @@ int main(int argc, char *argv[]) {
   // 画像データの読み込み
   fread(gray, sizeof(unsigned char), width * height, img);
 
+  // メディアインフィルタを用いてノイズ除去
+  median_filter(gray, width, height);
+
   free(gray);
 
   fclose(img);
@@ -52,4 +62,52 @@ void read_header(FILE *img, int *width, int *height) {
 
     i++;
   }
+}
+
+// メディアインフィルタを用いてノイズ除去(gray: 元画像のデータ, width: 画像幅, height: 画像高さ)
+void median_filter(unsigned char gray[], int width, int height) {
+  FILE *img_denoise;                          // ノイズ除去後のファイル
+  unsigned char gray_denoise[width * height]; // ノイズ除去後の画像データ
+  int neighbor[9];                            // 近傍画素の値
+
+  // 書き込むファイルを開く(開けなかった場合プログラムを終了)
+  if ((img_denoise = fopen("denoise.pgm", "wb")) == NULL) {
+    printf("ファイルが開けませんでした。\n");
+    exit(1);
+  }
+
+  // 元画像にメディアンフィルタを適用してノイズ除去
+  for (int i = 1; i < width - 1; i++) {
+    for (int j = 1; j < height - 1; j++) {
+      // 近傍がその値を代入
+      neighbor[0] = gray[i - width - 1];
+      neighbor[1] = gray[i - width];
+      neighbor[2] = gray[i - width + 1];
+      neighbor[3] = gray[i - 1];
+      neighbor[4] = gray[i];
+      neighbor[5] = gray[i + 1];
+      neighbor[6] = gray[i + width - 1];
+      neighbor[7] = gray[i + width];
+      neighbor[8] = gray[i + width + 1];
+
+      // ソート
+      qsort(neighbor, sizeof(neighbor) / sizeof(neighbor[0]), sizeof(int), cmpnum);
+    }
+  }
+
+  // ヘッダを書き込む
+  fprintf(img_denoise, "P5\n%d %d\n255\n", width, height);
+
+  // 画像データを書き込む
+  fwrite(gray_denoise, sizeof(unsigned char), width * height, img_denoise);
+
+  fclose(img_denoise);
+}
+
+// 並べ替え基準を示す関数(昇順)
+int cmpnum(const void * n1, const void * n2)
+{
+	if (*(int *)n1 > *(int *)n2) return 1;
+	else if (*(int *)n1 < *(int *)n2) return -1;
+	else return 0;
 }
