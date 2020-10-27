@@ -13,14 +13,7 @@ int main(int argc, char *argv[]) {
   int *freq;                   // 頻度を保存するための配列
 
   // コマンドライン引数の数が適切でない場合プログラムを終了
-  if (argc < 2) {
-    printf("画像ファイルのパスを指定してください。\n");
-    exit(1);
-  }
-  else if (argc > 2) {
-    printf("指定できる画像ファイルは1つです。\n");
-    exit(1);
-  }
+  if (argc != 2) exit(1);
 
   // 第一引数で指定された画像ファイルを開く(開けなかった場合プログラムを終了)
   if ((img = fopen(argv[1], "rb")) == NULL) {
@@ -63,13 +56,12 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
-// ヘッダの情報を読み取る(img: 読み込む画像のファイルポインタ, width: 画像の横幅保存用, height: 画像の縦幅保存用)
+// ヘッダの情報を読み取る(img: 読み込む画像のファイルポインタ, width: 画像の横幅保存用, height: 画像の縦幅保存用, maxdepth: 最大階調値)
 void read_header(FILE *img, int *width, int *height, int *maxdepth) {
   int i;
   char buf[256]; // ヘッダ読み込み時のバッファ
 
   while (i < 3) {
-    // 1行読み取る
     fgets(buf, sizeof(buf), img);
 
     // コメントの場合読み飛ばす
@@ -81,7 +73,6 @@ void read_header(FILE *img, int *width, int *height, int *maxdepth) {
     // 画像の最大階調値を読み取る
     if (i == 2) sscanf(buf, "%d", maxdepth);
 
-    // 次の行に移動
     i++;
   }
 }
@@ -109,24 +100,12 @@ void output_table(unsigned char gray[], int freq[], int img_size, int maxdepth) 
   fclose(table);
 }
 
-// ヒストグラム平滑化(freq: 頻度, img_size: 画像サイズ)
+// ヒストグラム平滑化(freq: 頻度, img_size: 画像サイズ, maxdepth: 最大階調値)
 void smooth_histogram(int freq[], int img_size, int maxdepth) {
   int depth_goal = 64;                   // 目標階調数
   int freq_goal = img_size / depth_goal; // 頻度目標値
   int cum = 0;                           // 蓄積頻度
-  int cum_freq[maxdepth];                // 蓄積頻度の配列
-  int diff_goal[maxdepth];               // 目標頻度と蓄積頻度の差の絶対値の配列
   int cur_thick[maxdepth];               // 補正濃度の配列
-
-  // 蓄積頻度の列と、目標頻度と蓄積頻度の差の絶対値の列を作成
-  for (int i = 0; i <= maxdepth; i++) {
-    // 蓄積頻度
-    cum += freq[i];
-    cum_freq[i] = cum;
-
-    // 目標頻度と蓄積頻度の差の絶対値
-    diff_goal[i] = abs(freq_goal - cum_freq[i]);
-  }
 
   // 補正濃度の配列の値を全て0で初期化
   for (int i = 0; i <= maxdepth; i++) {
@@ -134,19 +113,16 @@ void smooth_histogram(int freq[], int img_size, int maxdepth) {
   }
 
   // 濃度変換表作成
-  for (int i = 1; i <= maxdepth; i++) {
-    if (diff_goal[i] < diff_goal[i - 1]) {
-      cum_freq[i] = 0;
-      cur_thick[i] = cur_thick[i - 1] + 1;
-      if (cur_thick[i] >= depth_goal) cur_thick[i] = depth_goal - 1;
+  for (int i = 0; i <= maxdepth; i++) {
+    // 「目標頻度と蓄積頻度の差の絶対値」と「"目標頻度と蓄積頻度の差"と現在の頻度の差の絶対値」を比較
+    if (abs(freq_goal - cum) < abs(freq_goal - cum - freq[i])) {
+      cum = 0;                                                       // 蓄積頻度を0にする
+      cur_thick[i] = (i ? cur_thick[i - 1] : 0) + 1;                 // 補正濃度を1加算(iが0の場合は前の補正濃度の値を0とする)
+      if (cur_thick[i] >= depth_goal) cur_thick[i] = depth_goal - 1; // 補正濃度が目標階調数以上の場合の処理
     }
     else {
-      cur_thick[i] = cur_thick[i - 1];
+      cur_thick[i] = i ? cur_thick[i - 1] : 0;                       // 補正濃度の値を現在の補正濃度の値にする
     }
-    cum_freq[i] += freq[i];
-  }
-
-  for (int i = 0; i <= maxdepth; i++) {
-    printf("%3d  %4d  %5d  %5d  %2d\n", i, freq[i], cum_freq[i], diff_goal[i], cur_thick[i]);
+    cum += freq[i];                                                  // 蓄積頻度に現在の濃度の頻度を加算
   }
 }
