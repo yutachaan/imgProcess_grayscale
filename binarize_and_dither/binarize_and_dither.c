@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 void read_header(FILE *img, int *width, int *height);
+void binarize(unsigned char gray[], int width, int height);
 
 int main(int argc, char *argv[]) {
   FILE *img;           // 元画像
@@ -29,6 +30,9 @@ int main(int argc, char *argv[]) {
   // 画像データの読み込み
   fread(gray, sizeof(unsigned char), width * height, img);
 
+  // 固定しきい値法を用いて画像を2値化
+  binarize(gray, width, height);
+
   fclose(img);
 
   free(gray);
@@ -52,4 +56,29 @@ void read_header(FILE *img, int *width, int *height) {
 
     i++;
   }
+}
+
+// 固定しきい値法を用いて画像を2値化(gray: 元画像のデータ, width: 画像幅, height: 画像高さ)
+void binarize(unsigned char gray[], int width, int height) {
+  FILE *img_binarize; // 2値化後の画像
+  unsigned char gray_binarize[width * height]; // 2値化後の画像データ
+
+  // 固定しきい値法
+  for (int i = 0; i < width * height; i++) {
+    gray_binarize[i] = (gray[i] >= 128) ? 255 : 0;
+  }
+
+  // 書き込むファイルを開く(開なかった場合プログラムを終了)
+  if ((img_binarize = fopen("binarize.pgm", "wb")) == NULL) {
+    printf("ファイルが開けませんでした。\n");
+    exit(1);
+  }
+
+  // ヘッダを書き込む
+  fprintf(img_binarize, "P5\n%d %d\n255\n", width, height);
+
+  // 画像データを書き込む
+  fwrite(gray_binarize, sizeof(unsigned char), width * height, img_binarize);
+
+  fclose(img_binarize);
 }
