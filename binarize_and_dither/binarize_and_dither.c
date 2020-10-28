@@ -1,8 +1,14 @@
+/* 参考: 京都大学OCW「出力処理」
+   https://ocw.kyoto-u.ac.jp/ja/09-faculty-of-engineering-jp/image-processing/pdf/dip_04.pdf
+   閲覧日: 2020-10-28
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 
 void read_header(FILE *img, int *width, int *height);
 void binarize(unsigned char gray[], int width, int height);
+void dither(unsigned char gray[], int width, int height);
 
 int main(int argc, char *argv[]) {
   FILE *img;           // 元画像
@@ -33,6 +39,9 @@ int main(int argc, char *argv[]) {
   // 固定しきい値法を用いて画像を2値化
   binarize(gray, width, height);
 
+  // Bayerマトリクスを用いてディザ画像を生成
+  dither(gray, width, height);
+
   fclose(img);
 
   free(gray);
@@ -60,7 +69,7 @@ void read_header(FILE *img, int *width, int *height) {
 
 // 固定しきい値法を用いて画像を2値化(gray: 元画像のデータ, width: 画像幅, height: 画像高さ)
 void binarize(unsigned char gray[], int width, int height) {
-  FILE *img_binarize; // 2値化後の画像
+  FILE *img_binarize;                          // 2値化後の画像
   unsigned char gray_binarize[width * height]; // 2値化後の画像データ
 
   // 固定しきい値法
@@ -81,4 +90,34 @@ void binarize(unsigned char gray[], int width, int height) {
   fwrite(gray_binarize, sizeof(unsigned char), width * height, img_binarize);
 
   fclose(img_binarize);
+}
+
+// Bayerマトリクスを用いてディザ画像を生成(gray: 元画像のデータ, width: 画像幅, height: 画像高さ)
+void dither(unsigned char gray[], int width, int height) {
+  FILE *img_dither;                          // ディザ画像
+  unsigned char gray_dither[width * height]; // ディザ画像データ
+  int bayer[4][4] = {{ 15, 135,  45, 165},     //Bayerマトリクス
+                     {195,  75, 225, 105},
+                     { 60, 180,  30, 150},
+                     {240, 120, 210,  90}};
+
+  // ディザ画像を生成
+  // for (int i = 0; i < width; i++) {
+  //   for (int j = 0; j < height; j++) {
+  //   }
+  // }
+
+  // 書き込むファイルを開く(開なかった場合プログラムを終了)
+  if ((img_dither = fopen("dither.pgm", "wb")) == NULL) {
+    printf("ファイルが開けませんでした。\n");
+    exit(1);
+  }
+
+  // ヘッダを書き込む
+  fprintf(img_dither, "P5\n%d %d\n255\n", width, height);
+
+  // 画像データを書き込む
+  fwrite(gray_dither, sizeof(unsigned char), width * height, img_dither);
+
+  fclose(img_dither);
 }
