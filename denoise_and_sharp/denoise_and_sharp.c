@@ -7,13 +7,15 @@
 #include <stdlib.h>
 
 void read_header(FILE *img, int *width, int *height);
-void median_filter(unsigned char gray[], int width, int height);
+void median_filter(unsigned char gray[], unsigned char gray_denoise[], int width, int height);
+void laplacian_filter(unsigned char gray_denoise[], int width, int height);
 int cmpnum(const void * n1, const void * n2);
 
 int main(int argc, char *argv[]) {
-  FILE *img;            // 元画像
-  int width, height;    // 画像の横幅, 縦幅, 最大階調値
-  unsigned char *gray;  // グレイスケール画像データ
+  FILE *img;                   // 元画像
+  int width, height;           // 画像の横幅, 縦幅, 最大階調値
+  unsigned char *gray;         // グレイスケール画像データ
+  unsigned char *gray_denoise; // ノイズ除去後の画像データ
 
   // コマンドライン引数の数が適切でない場合プログラムを終了
   if (argc != 2) exit(1);
@@ -36,8 +38,19 @@ int main(int argc, char *argv[]) {
   // 画像データの読み込み
   fread(gray, sizeof(unsigned char), width * height, img);
 
+  // 配列を動的に確保(確保できなかった場合プログラムを終了)
+  if ((gray_denoise = (unsigned char *)malloc(sizeof(unsigned char) * width * height)) == NULL) {
+    printf("メモリが確保できませんでした。\n");
+    exit(1);
+  }
+
   // メディアインフィルタを用いてノイズ除去
-  median_filter(gray, width, height);
+  median_filter(gray, gray_denoise, width, height);
+
+  // 8近傍ラプラシアンフフィルタを用いて鮮鋭化
+  laplacian_filter(gray_denoise, width, height);
+
+  free(gray_denoise);
 
   free(gray);
 
@@ -64,24 +77,23 @@ void read_header(FILE *img, int *width, int *height) {
   }
 }
 
-// メディアインフィルタを用いてノイズ除去(gray: 元画像のデータ, width: 画像幅, height: 画像高さ)
-void median_filter(unsigned char gray[], int width, int height) {
-  FILE *img_denoise;                          // ノイズ除去後のファイル
-  unsigned char gray_denoise[width * height]; // ノイズ除去後の画像データ
-  int neighbor[9];                            // 近傍画素の値
-  int pos;                                    // 注目画素の座標
-
-  // 書き込むファイルを開く(開けなかった場合プログラムを終了)
-  if ((img_denoise = fopen("denoise.pgm", "wb")) == NULL) {
-    printf("ファイルが開けませんでした。\n");
-    exit(1);
-  }
+// メディアインフィルタ(gray: 元画像のデータ, gray_denoise: ノイズ除去後の画像データ, width: 画像幅, height: 画像高さ)
+void median_filter(unsigned char gray[], unsigned char gray_denoise[], int width, int height) {
+  FILE *img_denoise; // ノイズ除去後のファイル
+  int neighbor[9];   // 近傍画素の値
+  int pos;           // 注目画素の座標
 
   // 元画像にメディアンフィルタを適用してノイズ除去
-  for (int i = 1; i < width - 1; i++) {
-    for (int j = 1; j < height - 1; j++) {
+  for (int i = 0; i < width; i++) {
+    for (int j = 0; j < height; j++) {
       // 注目画素の座標を求める
-      pos = j * width - i;
+      pos = j * width + i;
+
+      // 端の画素はそのままの値を使用
+      if (i == 0 || i == width - 1 || j == 0 || j == height - 1) {
+        gray_denoise[pos] = gray[pos];
+        continue;
+      }
 
       // 近傍画素の値を代入
       neighbor[0] = gray[pos - width - 1];
@@ -102,6 +114,12 @@ void median_filter(unsigned char gray[], int width, int height) {
     }
   }
 
+  // 書き込むファイルを開く(開けなかった場合プログラムを終了)
+  if ((img_denoise = fopen("denoise.pgm", "wb")) == NULL) {
+    printf("ファイルが開けませんでした。\n");
+    exit(1);
+  }
+
   // ヘッダを書き込む
   fprintf(img_denoise, "P5\n%d %d\n255\n", width, height);
 
@@ -109,6 +127,66 @@ void median_filter(unsigned char gray[], int width, int height) {
   fwrite(gray_denoise, sizeof(unsigned char), width * height, img_denoise);
 
   fclose(img_denoise);
+}
+
+// 8近傍ラプラシアンフィルタ(gray_denoise: ノイズ除去後の画像データ, width: 画像幅, height: 画像高さ)
+void laplacian_filter(unsigned char gray_denoise[], int width, int height) {
+  FILE *img_sharp;                          // 鮮鋭化後のファイル
+  unsigned char gray_sharp[width * height]; // 鮮鋭化後の画像データ
+  int neighbor[9];                          // 近傍画素の値
+  int pos;                                  // 注目画素の座標
+  int laplacian_sum;                        // ラプラシアンフィルタ適用後の近傍画素の値の合計
+
+  // 元画像に8近傍ラプラシアンフィルタを適用して鮮鋭化
+  for (int i = 0; i < width; i++) {
+    for (int j = 0; j < height; j++) {
+      // 注目画素の座標を求める
+      pos = j * width + i;
+
+      // 端の画素はそのままの値を使用
+      if (i == 0 || i == width - 1 || j == 0 || j == height - 1) {
+        gray_sharp[pos] = gray_denoise[pos];
+        continue;
+      }
+
+      laplacian_sum = 0;
+
+      // 近傍画素の値を代入
+      neighbor[0] = gray_denoise[pos - width - 1];
+      neighbor[1] = gray_denoise[pos - width];
+      neighbor[2] = gray_denoise[pos - width + 1];
+      neighbor[3] = gray_denoise[pos - 1];
+      neighbor[4] = gray_denoise[pos] * (-8);
+      neighbor[5] = gray_denoise[pos + 1];
+      neighbor[6] = gray_denoise[pos + width - 1];
+      neighbor[7] = gray_denoise[pos + width];
+      neighbor[8] = gray_denoise[pos + width + 1];
+
+      // ラプラシアンフィルタ適用後の近傍画素の合計値を求める
+      for (int k = 0; k < 9; k++) {
+        laplacian_sum += neighbor[k];
+      }
+
+      // 元の値から合計値を引いたものを新しい値とする(0未満の場合は0, 255より大きい場合は255にする)
+      if ((gray_denoise[pos] - laplacian_sum) < 0) gray_sharp[pos] = 0;
+      else if ((gray_denoise[pos] - laplacian_sum) > 255) gray_sharp[pos] = 255;
+      else gray_sharp[pos] = gray_denoise[pos] - laplacian_sum;
+    }
+  }
+
+  // 書き込むファイルを開く(開けなかった場合プログラムを終了)
+  if ((img_sharp = fopen("sharp.pgm", "wb")) == NULL) {
+    printf("ファイルが開けませんでした。\n");
+    exit(1);
+  }
+
+  // ヘッダを書き込む
+  fprintf(img_sharp, "P5\n%d %d\n255\n", width, height);
+
+  // 画像データを書き込む
+  fwrite(gray_sharp, sizeof(unsigned char), width * height, img_sharp);
+
+  fclose(img_sharp);
 }
 
 // 並べ替え基準を示す関数(昇順)
