@@ -12,9 +12,9 @@ void convert_img_to_gray(RGB rgb[], char filepath[], int width, int height);
 unsigned char convert_pixel_to_gray(RGB rgb[], int mode);
 
 int main(int argc, char *argv[]) {
-  FILE *img;                   // 元画像
-  int width, height, img_size; // 画像の横幅、縦幅、サイズ
-  RGB *rgb;                    // RGB画像用
+  FILE *img;         // 元画像
+  int width, height; // 画像の横幅、縦幅
+  RGB *rgb;          // RGB画像用
 
   // コマンドライン引数の数が適切でない場合プログラムを終了
   if (argc != 2) exit(1);
@@ -81,7 +81,7 @@ void read_header(FILE *img, int *width, int *height) {
 void convert_img_to_gray(RGB rgb[], char filepath[], int width, int height) {
   FILE *img_proc;                     // 変換後の画像
   unsigned char gray[width * height]; // グレイスケール変換後の画像データ
-  static int mode;                    // 変換するモードを管理
+  static int mode;                    // 変換するモード
 
   // モードを更新
   mode++;

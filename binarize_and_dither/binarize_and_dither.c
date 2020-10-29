@@ -36,13 +36,13 @@ int main(int argc, char *argv[]) {
   // 画像データの読み込み
   fread(gray, sizeof(unsigned char), width * height, img);
 
+  fclose(img);
+
   // 固定しきい値法を用いて画像を2値化
   binarize(gray, width, height);
 
   // Bayerマトリクスを用いてディザ画像を生成
   dither(gray, width, height);
-
-  fclose(img);
 
   free(gray);
 
@@ -69,34 +69,34 @@ void read_header(FILE *img, int *width, int *height) {
 
 // 固定しきい値法を用いて画像を2値化(gray: 元画像のデータ, width: 画像幅, height: 画像高さ)
 void binarize(unsigned char gray[], int width, int height) {
-  FILE *img_binarize;                          // 2値化後の画像
-  unsigned char gray_binarize[width * height]; // 2値化後の画像データ
+  FILE *img_bin;                     // 2値化後の画像
+  unsigned char bin[width * height]; // 2値化後の画像データ
 
   // 固定しきい値法
   for (int i = 0; i < width * height; i++) {
-    gray_binarize[i] = (gray[i] >= 128) ? 255 : 0;
+    bin[i] = (gray[i] >= 128) ? 255 : 0;
   }
 
   // 書き込むファイルを開く(開なかった場合プログラムを終了)
-  if ((img_binarize = fopen("binarize.pgm", "wb")) == NULL) {
+  if ((img_bin = fopen("binarize.pgm", "wb")) == NULL) {
     printf("ファイルが開けませんでした。\n");
     exit(1);
   }
 
   // ヘッダを書き込む
-  fprintf(img_binarize, "P5\n%d %d\n255\n", width, height);
+  fprintf(img_bin, "P5\n%d %d\n255\n", width, height);
 
   // 画像データを書き込む
-  fwrite(gray_binarize, sizeof(unsigned char), width * height, img_binarize);
+  fwrite(bin, sizeof(unsigned char), width * height, img_bin);
 
-  fclose(img_binarize);
+  fclose(img_bin);
 }
 
 // Bayerマトリクスを用いてディザ画像を生成(gray: 元画像のデータ, width: 画像幅, height: 画像高さ)
 void dither(unsigned char gray[], int width, int height) {
-  FILE *img_dither;                          // ディザ画像
-  unsigned char gray_dither[width * height]; // ディザ画像データ
-  int bayer[4][4] = {{ 15, 135,  45, 165},   //Bayerマトリクス
+  FILE *img_dither;                         // ディザ画像
+  unsigned char dither[width * height];     // ディザ画像データ
+  int bayer[4][4] = {{ 15, 135,  45, 165},  //Bayerマトリクス
                      {195,  75, 225, 105},
                      { 60, 180,  30, 150},
                      {240, 120, 210,  90}};
@@ -104,7 +104,7 @@ void dither(unsigned char gray[], int width, int height) {
   // 組織的ディザ法
   for (int i = 0; i < width; i++) {
     for (int j = 0; j < height; j++) {
-      gray_dither[j * width + i] = (gray[j * width + i] >= bayer[i % 4][j % 4]) ? 255 : 0;
+      dither[j * width + i] = (gray[j * width + i] >= bayer[i % 4][j % 4]) ? 255 : 0;
     }
   }
 
@@ -118,7 +118,7 @@ void dither(unsigned char gray[], int width, int height) {
   fprintf(img_dither, "P5\n%d %d\n255\n", width, height);
 
   // 画像データを書き込む
-  fwrite(gray_dither, sizeof(unsigned char), width * height, img_dither);
+  fwrite(dither, sizeof(unsigned char), width * height, img_dither);
 
   fclose(img_dither);
 }

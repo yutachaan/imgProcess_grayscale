@@ -9,7 +9,7 @@ int main(int argc, char *argv[]) {
   FILE *img;                   // 元画像
   int width, height, maxdepth; // 画像の横幅, 縦幅, 最大階調値
   unsigned char *gray;         // グレイスケール画像データ
-  int *freq;                   // 頻度を保存するための配列
+  int *freq;                   // 濃度頻度を保存する配列
 
   // コマンドライン引数の数が適切でない場合プログラムを終了
   if (argc != 2) exit(1);
@@ -74,7 +74,7 @@ void read_header(FILE *img, int *width, int *height, int *maxdepth) {
   }
 }
 
-// 濃度度数分布表を出力(gray: 画像データ, freq: 頻度を保存する配列, img_size: 画像のサイズ, maxdepth: 最大階調値)
+// 濃度度数分布表を出力(gray: 画像データ, freq: 濃度頻度を保存する配列, img_size: 画像のサイズ, maxdepth: 最大階調値)
 void output_table(unsigned char gray[], int freq[], int img_size, int maxdepth) {
   FILE *table; // 度数分布表を出力するファイル
 
@@ -98,16 +98,16 @@ void output_table(unsigned char gray[], int freq[], int img_size, int maxdepth) 
   fclose(table);
 }
 
-// ヒストグラム平滑化(gray: 画像データ, freq: 頻度, width: 画像幅, height: 画像高さ, maxdepth: 最大階調値)
+// ヒストグラム平滑化(gray: 画像データ, freq: 頻度, width: 画像の幅, height: 画像の高さ, maxdepth: 最大階調値)
 void smooth_histogram(unsigned char gray[], int freq[], int width, int height, int maxdepth) {
   FILE *img_smooth;                              // 平滑化処理後の画像ファイル
-  char gray_smooth[width * height];              // 平滑化処理後の画像データ
+  char smooth[width * height];                   // 平滑化処理後の画像データ
   int depth_goal = 64;                           // 目標階調数
   int freq_goal = (width * height) / depth_goal; // 頻度目標値
   int cum_freq = 0;                              // 蓄積頻度
   int cur_thick[maxdepth];                       // 補正濃度
 
-  // 補正濃度の配列の値を全て0で初期化
+  // 補正濃度の配列の値を0で初期化
   for (int i = 0; i <= maxdepth; i++) {
     cur_thick[i] = 0;
   }
@@ -128,7 +128,7 @@ void smooth_histogram(unsigned char gray[], int freq[], int width, int height, i
 
   // 濃度変換表で変換した値を代入
   for (int i = 0; i < width * height; i++) {
-    gray_smooth[i] = cur_thick[gray[i]] * ((maxdepth + 1) / depth_goal);
+    smooth[i] = cur_thick[gray[i]] * ((maxdepth + 1) / depth_goal);
   }
 
   // 書き込むファイルを開く(開けなかった場合プログラムを終了)
@@ -141,7 +141,7 @@ void smooth_histogram(unsigned char gray[], int freq[], int width, int height, i
   fprintf(img_smooth, "P5\n%d %d\n%d\n", width, height, maxdepth);
 
   // 画像データを書き込む
-  fwrite(gray_smooth, sizeof(char), width * height, img_smooth);
+  fwrite(smooth, sizeof(char), width * height, img_smooth);
 
   fclose(img_smooth);
 }

@@ -7,15 +7,15 @@
 #include <stdlib.h>
 
 void read_header(FILE *img, int *width, int *height);
-void median_filter(unsigned char gray[], unsigned char gray_denoise[], int width, int height);
-void laplacian_filter(unsigned char gray_denoise[], int width, int height);
+void median_filter(unsigned char gray[], unsigned char denoise[], int width, int height);
+void laplacian_filter(unsigned char denoise[], int width, int height);
 int cmpnum(const void * n1, const void * n2);
 
 int main(int argc, char *argv[]) {
-  FILE *img;                   // 元画像
-  int width, height;           // 画像の横幅, 縦幅, 最大階調値
-  unsigned char *gray;         // グレイスケール画像データ
-  unsigned char *gray_denoise; // ノイズ除去後の画像データ
+  FILE *img;              // 元画像
+  int width, height;      // 画像の横幅, 縦幅, 最大階調値
+  unsigned char *gray;    // グレイスケール画像データ
+  unsigned char *denoise; // ノイズ除去後の画像データ
 
   // コマンドライン引数の数が適切でない場合プログラムを終了
   if (argc != 2) exit(1);
@@ -38,23 +38,23 @@ int main(int argc, char *argv[]) {
   // 画像データの読み込み
   fread(gray, sizeof(unsigned char), width * height, img);
 
+  fclose(img);
+
   // 配列を動的に確保(確保できなかった場合プログラムを終了)
-  if ((gray_denoise = (unsigned char *)malloc(sizeof(unsigned char) * width * height)) == NULL) {
+  if ((denoise = (unsigned char *)malloc(sizeof(unsigned char) * width * height)) == NULL) {
     printf("メモリが確保できませんでした。\n");
     exit(1);
   }
 
   // メディアインフィルタを用いてノイズ除去
-  median_filter(gray, gray_denoise, width, height);
-
-  // 8近傍ラプラシアンフフィルタを用いて鮮鋭化
-  laplacian_filter(gray_denoise, width, height);
-
-  free(gray_denoise);
+  median_filter(gray, denoise, width, height);
 
   free(gray);
 
-  fclose(img);
+  // 8近傍ラプラシアンフフィルタを用いて鮮鋭化
+  laplacian_filter(denoise, width, height);
+
+  free(denoise);
 
   return 0;
 }
@@ -77,8 +77,8 @@ void read_header(FILE *img, int *width, int *height) {
   }
 }
 
-// メディアインフィルタ(gray: 元画像のデータ, gray_denoise: ノイズ除去後の画像データ, width: 画像幅, height: 画像高さ)
-void median_filter(unsigned char gray[], unsigned char gray_denoise[], int width, int height) {
+// メディアインフィルタ(gray: 元画像のデータ, denoise: ノイズ除去後の画像データ, width: 画像の幅, height: 画像の高さ)
+void median_filter(unsigned char gray[], unsigned char denoise[], int width, int height) {
   FILE *img_denoise; // ノイズ除去後のファイル
   int neighbor[9];   // 近傍画素の値
   int pos;           // 注目画素の座標
@@ -91,7 +91,7 @@ void median_filter(unsigned char gray[], unsigned char gray_denoise[], int width
 
       // 端の画素はそのままの値を使用
       if (i == 0 || i == width - 1 || j == 0 || j == height - 1) {
-        gray_denoise[pos] = gray[pos];
+        denoise[pos] = gray[pos];
         continue;
       }
 
@@ -110,7 +110,7 @@ void median_filter(unsigned char gray[], unsigned char gray_denoise[], int width
       qsort(neighbor, sizeof(neighbor) / sizeof(neighbor[0]), sizeof(int), cmpnum);
 
       // 近傍画素の中央値を新しい値として使用
-      gray_denoise[pos] = neighbor[4];
+      denoise[pos] = neighbor[4];
     }
   }
 
@@ -124,18 +124,18 @@ void median_filter(unsigned char gray[], unsigned char gray_denoise[], int width
   fprintf(img_denoise, "P5\n%d %d\n255\n", width, height);
 
   // 画像データを書き込む
-  fwrite(gray_denoise, sizeof(unsigned char), width * height, img_denoise);
+  fwrite(denoise, sizeof(unsigned char), width * height, img_denoise);
 
   fclose(img_denoise);
 }
 
-// 8近傍ラプラシアンフィルタ(gray_denoise: ノイズ除去後の画像データ, width: 画像幅, height: 画像高さ)
-void laplacian_filter(unsigned char gray_denoise[], int width, int height) {
-  FILE *img_sharp;                          // 鮮鋭化後のファイル
-  unsigned char gray_sharp[width * height]; // 鮮鋭化後の画像データ
-  int neighbor[9];                          // 近傍画素の値
-  int pos;                                  // 注目画素の座標
-  int laplacian_sum;                        // ラプラシアンフィルタ適用後の近傍画素の値の合計
+// 8近傍ラプラシアンフィルタ(denoise: ノイズ除去後の画像データ, width: 画像幅, height: 画像高さ)
+void laplacian_filter(unsigned char denoise[], int width, int height) {
+  FILE *img_sharp;                     // 鮮鋭化後のファイル
+  unsigned char sharp[width * height]; // 鮮鋭化後の画像データ
+  int neighbor[9];                     // 近傍画素の値
+  int pos;                             // 注目画素の座標
+  int laplacian_sum;                   // ラプラシアンフィルタ適用後の近傍画素の値の合計
 
   // 元画像に8近傍ラプラシアンフィルタを適用して鮮鋭化
   for (int i = 0; i < width; i++) {
@@ -145,22 +145,22 @@ void laplacian_filter(unsigned char gray_denoise[], int width, int height) {
 
       // 端の画素はそのままの値を使用
       if (i == 0 || i == width - 1 || j == 0 || j == height - 1) {
-        gray_sharp[pos] = gray_denoise[pos];
+        sharp[pos] = denoise[pos];
         continue;
       }
 
       laplacian_sum = 0;
 
-      // 近傍画素の値を代入
-      neighbor[0] = gray_denoise[pos - width - 1];
-      neighbor[1] = gray_denoise[pos - width];
-      neighbor[2] = gray_denoise[pos - width + 1];
-      neighbor[3] = gray_denoise[pos - 1];
-      neighbor[4] = gray_denoise[pos] * (-8);
-      neighbor[5] = gray_denoise[pos + 1];
-      neighbor[6] = gray_denoise[pos + width - 1];
-      neighbor[7] = gray_denoise[pos + width];
-      neighbor[8] = gray_denoise[pos + width + 1];
+      // 近傍画素にラプラシアンフィルタを適用した値を代入
+      neighbor[0] = denoise[pos - width - 1];
+      neighbor[1] = denoise[pos - width];
+      neighbor[2] = denoise[pos - width + 1];
+      neighbor[3] = denoise[pos - 1];
+      neighbor[4] = denoise[pos] * (-8);
+      neighbor[5] = denoise[pos + 1];
+      neighbor[6] = denoise[pos + width - 1];
+      neighbor[7] = denoise[pos + width];
+      neighbor[8] = denoise[pos + width + 1];
 
       // ラプラシアンフィルタ適用後の近傍画素の合計値を求める
       for (int k = 0; k < 9; k++) {
@@ -168,9 +168,15 @@ void laplacian_filter(unsigned char gray_denoise[], int width, int height) {
       }
 
       // 元の値から合計値を引いたものを新しい値とする(0未満の場合は0, 255より大きい場合は255にする)
-      if ((gray_denoise[pos] - laplacian_sum) < 0) gray_sharp[pos] = 0;
-      else if ((gray_denoise[pos] - laplacian_sum) > 255) gray_sharp[pos] = 255;
-      else gray_sharp[pos] = gray_denoise[pos] - laplacian_sum;
+      if ((denoise[pos] - laplacian_sum) < 0) {
+        sharp[pos] = 0;
+      }
+      else if ((denoise[pos] - laplacian_sum) > 255) {
+        sharp[pos] = 255;
+      }
+      else {
+        sharp[pos] = denoise[pos] - laplacian_sum;
+      }
     }
   }
 
@@ -184,7 +190,7 @@ void laplacian_filter(unsigned char gray_denoise[], int width, int height) {
   fprintf(img_sharp, "P5\n%d %d\n255\n", width, height);
 
   // 画像データを書き込む
-  fwrite(gray_sharp, sizeof(unsigned char), width * height, img_sharp);
+  fwrite(sharp, sizeof(unsigned char), width * height, img_sharp);
 
   fclose(img_sharp);
 }
