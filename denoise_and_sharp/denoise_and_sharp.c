@@ -196,9 +196,8 @@ void laplacian_filter(unsigned char denoise[], int width, int height) {
 }
 
 // 並べ替え基準を示す関数(昇順)
-int cmpnum(const void * n1, const void * n2)
-{
-	if (*(int *)n1 > *(int *)n2) return 1;
-	else if (*(int *)n1 < *(int *)n2) return -1;
-	else return 0;
+int cmpnum(const void * n1, const void * n2) {
+  if (*(int *)n1 > *(int *)n2) return 1;
+  else if (*(int *)n1 < *(int *)n2) return -1;
+  else return 0;
 }
