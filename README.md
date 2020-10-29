@@ -12,8 +12,7 @@
 第六回(終了): 2値化とディザ → binarize_and_dither  
 ※課題1は固定しきい値法を使用
 
-- 実行時、第一引数に変換したい画像のパスを指定する。
-- 画像は1元配列で管理している
+実行時、第一引数に変換したい画像のパスを指定する。
 
 <a href="https://gitmoji.carloscuesta.me">
   <img src="https://img.shields.io/badge/gitmoji-%20😜%20😍-FFDD67.svg?style=flat-square" alt="Gitmoji">
