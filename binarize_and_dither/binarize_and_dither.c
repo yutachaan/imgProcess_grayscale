@@ -96,16 +96,17 @@ void binarize(unsigned char gray[], int width, int height) {
 void dither(unsigned char gray[], int width, int height) {
   FILE *img_dither;                          // ディザ画像
   unsigned char gray_dither[width * height]; // ディザ画像データ
-  int bayer[4][4] = {{ 15, 135,  45, 165},     //Bayerマトリクス
+  int bayer[4][4] = {{ 15, 135,  45, 165},   //Bayerマトリクス
                      {195,  75, 225, 105},
                      { 60, 180,  30, 150},
                      {240, 120, 210,  90}};
 
-  // ディザ画像を生成
-  // for (int i = 0; i < width; i++) {
-  //   for (int j = 0; j < height; j++) {
-  //   }
-  // }
+  // 組織的ディザ法
+  for (int i = 0; i < width; i++) {
+    for (int j = 0; j < height; j++) {
+      gray_dither[j * width + i] = (gray[j * width + i] >= bayer[i % 4][j % 4]) ? 255 : 0;
+    }
+  }
 
   // 書き込むファイルを開く(開なかった場合プログラムを終了)
   if ((img_dither = fopen("dither.pgm", "wb")) == NULL) {
