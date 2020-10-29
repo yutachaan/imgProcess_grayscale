@@ -89,8 +89,9 @@ void output_table(unsigned char gray[], int freq[], int img_size, int maxdepth) 
     exit(1);
   }
 
-  // 濃度度数分布表をcsvファイルに出力
+  // 濃度度数分布表をcsvファイルとターミナル出力
   for (int i = 0; i <= maxdepth; i++) {
+    printf("%3d %4d\n", i, freq[i]);
     fprintf(table, "%d,%d\n", i, freq[i]);
   }
 
