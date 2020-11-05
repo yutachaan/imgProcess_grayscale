@@ -131,7 +131,6 @@ void laplacian_filter(unsigned char denoise[], int width, int height) {
         continue;
       }
 
-
       // 近傍画素にラプラシアンフィルタを適用した値を代入
       int neighbor[9];
       neighbor[0] = denoise[pos - width - 1];
