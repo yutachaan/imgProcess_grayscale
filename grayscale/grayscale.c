@@ -20,19 +20,12 @@ int main(int argc, char *argv[]) {
   if (argc != 2) exit(1);
 
   // 第一引数で指定された画像ファイルを開く(開けなかった場合プログラムを終了)
-  if ((img = fopen(argv[1], "rb")) == NULL) {
-    printf("ファイルが開けませんでした。\n");
-    exit(1);
-  }
+  if ((img = fopen(argv[1], "rb")) == NULL) exit(1);
 
-  // ヘッダを読み取り、画像の横幅と縦幅を代入
   read_header(img, &width, &height);
 
   // RGB画像用の配列を動的に確保(確保できなかった場合プログラムを終了)
-  if ((rgb = (RGB *)malloc(sizeof(RGB) * width * height)) == NULL) {
-    printf("メモリが確保できませんでした。\n");
-    exit(1);
-  }
+  if ((rgb = (RGB *)malloc(sizeof(RGB) * width * height)) == NULL) exit(1);
 
   // 画像データの読み込み
   fread(rgb, sizeof(RGB), width * height, img);
@@ -61,9 +54,9 @@ int main(int argc, char *argv[]) {
 
 // ヘッダの情報を読み取る(img: 読み込む画像のファイルポインタ, width: 画像の横幅, height: 画像の縦幅)
 void read_header(FILE *img, int *width, int *height) {
-  int i;
   char buf[256];
 
+  int i;
   while (i < 3) {
     fgets(buf, sizeof(buf), img);
 
@@ -92,10 +85,7 @@ void convert_img_to_gray(RGB rgb[], char filepath[], int width, int height) {
   }
 
   // 書き込むファイルを開く(開なかった場合プログラムを終了)
-  if ((img_proc = fopen(filepath, "wb")) == NULL) {
-    printf("ファイルが開けませんでした。\n");
-    exit(1);
-  }
+  if ((img_proc = fopen(filepath, "wb")) == NULL) exit(1);
 
   // ヘッダを書き込む
   fprintf(img_proc, "P5\n%d %d\n255\n", width, height);

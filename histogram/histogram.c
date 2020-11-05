@@ -15,19 +15,12 @@ int main(int argc, char *argv[]) {
   if (argc != 2) exit(1);
 
   // 第一引数で指定された画像ファイルを開く(開けなかった場合プログラムを終了)
-  if ((img = fopen(argv[1], "rb")) == NULL) {
-    printf("ファイルが開けませんでした。\n");
-    exit(1);
-  }
+  if ((img = fopen(argv[1], "rb")) == NULL) exit(1);
 
-  // ヘッダを読み取り、画像の横幅と縦幅と最大階調値を代入
   read_header(img, &width, &height, &maxdepth);
 
   // 配列を動的に確保(確保できなかった場合プログラムを終了)
-  if ((gray = (unsigned char *)malloc(sizeof(unsigned char) * width * height)) == NULL) {
-    printf("メモリが確保できませんでした。\n");
-    exit(1);
-  }
+  if ((gray = (unsigned char *)malloc(sizeof(unsigned char) * width * height)) == NULL) exit(1);
 
   // 画像データの読み込み
   fread(gray, sizeof(unsigned char), width * height, img);
@@ -35,15 +28,10 @@ int main(int argc, char *argv[]) {
   fclose(img);
 
   // 配列を動的に確保(確保できなかった場合プログラムを終了)
-  if ((freq = (int *)malloc(sizeof(int) * maxdepth)) == NULL) {
-    printf("メモリが確保できませんでした。\n");
-    exit(1);
-  }
+  if ((freq = (int *)malloc(sizeof(int) * maxdepth)) == NULL) exit(1);
 
-  // 濃度度数分布表を出力
   output_table(gray, freq, width * height, maxdepth);
 
-  // ヒストグラム平滑化
   smooth_histogram(gray, freq, width, height, maxdepth);
 
   free(freq);
@@ -55,9 +43,9 @@ int main(int argc, char *argv[]) {
 
 // ヘッダの情報を読み取る(img: 読み込む画像のファイルポインタ, width: 画像の横幅, height: 画像の縦幅, maxdepth: 最大階調値)
 void read_header(FILE *img, int *width, int *height, int *maxdepth) {
-  int i;
   char buf[256];
 
+  int i;
   while (i < 3) {
     fgets(buf, sizeof(buf), img);
 
@@ -84,10 +72,7 @@ void output_table(unsigned char gray[], int freq[], int img_size, int maxdepth) 
   }
 
   // 書き込むファイルを開く(開けなかった場合プログラムを終了)
-  if ((table = fopen("freq_table.csv", "wb")) == NULL) {
-    printf("ファイルが開けませんでした。\n");
-    exit(1);
-  }
+  if ((table = fopen("freq_table.csv", "wb")) == NULL) exit(1);
 
   // 濃度度数分布表をcsvファイルとターミナル出力
   for (int i = 0; i <= maxdepth; i++) {
@@ -108,9 +93,7 @@ void smooth_histogram(unsigned char gray[], int freq[], int width, int height, i
   int cur_thick[maxdepth];                       // 補正濃度
 
   // 補正濃度の配列の値を0で初期化
-  for (int i = 0; i <= maxdepth; i++) {
-    cur_thick[i] = 0;
-  }
+  for (int i = 0; i <= maxdepth; i++) cur_thick[i] = 0;
 
   // 濃度変換表作成
   for (int i = 0; i <= maxdepth; i++) {
@@ -132,10 +115,7 @@ void smooth_histogram(unsigned char gray[], int freq[], int width, int height, i
   }
 
   // 書き込むファイルを開く(開けなかった場合プログラムを終了)
-  if ((img_smooth = fopen("smooth_histo.pgm", "wb")) == NULL) {
-    printf("ファイルが開けませんでした。\n");
-    exit(1);
-  }
+  if ((img_smooth = fopen("smooth_histo.pgm", "wb")) == NULL) exit(1);
 
   // ヘッダを書き込む
   fprintf(img_smooth, "P5\n%d %d\n%d\n", width, height, maxdepth);

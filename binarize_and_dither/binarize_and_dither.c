@@ -1,6 +1,7 @@
-/* 参考: 京都大学OCW「出力処理」
-   https://ocw.kyoto-u.ac.jp/ja/09-faculty-of-engineering-jp/image-processing/pdf/dip_04.pdf
-   閲覧日: 2020-10-28
+/*
+参考: 京都大学OCW「出力処理」
+https://ocw.kyoto-u.ac.jp/ja/09-faculty-of-engineering-jp/image-processing/pdf/dip_04.pdf
+(閲覧日: 2020-10-28)
 */
 
 #include <stdio.h>
@@ -19,29 +20,20 @@ int main(int argc, char *argv[]) {
   if (argc != 2) exit(1);
 
   // 第一引数で指定された画像ファイルを開く(開けなかった場合プログラムを終了)
-  if ((img = fopen(argv[1], "rb")) == NULL) {
-    printf("ファイルが開けませんでした。\n");
-    exit(1);
-  }
+  if ((img = fopen(argv[1], "rb")) == NULL) exit(1);
 
-  // ヘッダを読み取り、画像の横幅と縦幅を取得
   read_header(img, &width, &height);
 
   // 配列を動的に確保(確保できなかった場合プログラムを終了)
-  if ((gray = (unsigned char *)malloc(sizeof(unsigned char) * width * height)) == NULL) {
-    printf("メモリが確保できませんでした。\n");
-    exit(1);
-  }
+  if ((gray = (unsigned char *)malloc(sizeof(unsigned char) * width * height)) == NULL) exit(1);
 
   // 画像データの読み込み
   fread(gray, sizeof(unsigned char), width * height, img);
 
   fclose(img);
 
-  // 固定しきい値法を用いて画像を2値化
   binarize(gray, width, height);
 
-  // Bayerマトリクスを用いてディザ画像を生成
   dither(gray, width, height);
 
   free(gray);
@@ -51,9 +43,9 @@ int main(int argc, char *argv[]) {
 
 // ヘッダの情報を読み取る(img: 読み込む画像のファイルポインタ, width: 画像の横幅, height: 画像の縦幅)
 void read_header(FILE *img, int *width, int *height) {
-  int i;
   char buf[256];
 
+  int i;
   while (i < 3) {
     fgets(buf, sizeof(buf), img);
 
@@ -78,10 +70,7 @@ void binarize(unsigned char gray[], int width, int height) {
   }
 
   // 書き込むファイルを開く(開なかった場合プログラムを終了)
-  if ((img_bin = fopen("binarize.pgm", "wb")) == NULL) {
-    printf("ファイルが開けませんでした。\n");
-    exit(1);
-  }
+  if ((img_bin = fopen("binarize.pgm", "wb")) == NULL) exit(1);
 
   // ヘッダを書き込む
   fprintf(img_bin, "P5\n%d %d\n255\n", width, height);
@@ -109,10 +98,7 @@ void dither(unsigned char gray[], int width, int height) {
   }
 
   // 書き込むファイルを開く(開なかった場合プログラムを終了)
-  if ((img_dither = fopen("dither.pgm", "wb")) == NULL) {
-    printf("ファイルが開けませんでした。\n");
-    exit(1);
-  }
+  if ((img_dither = fopen("dither.pgm", "wb")) == NULL) exit(1);
 
   // ヘッダを書き込む
   fprintf(img_dither, "P5\n%d %d\n255\n", width, height);
