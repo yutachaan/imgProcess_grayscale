@@ -99,9 +99,28 @@ void sobel_filter(unsigned char gray[], int width, int height) {
   }
 
   // ミラーリング
+  for (int i = 0; i < width; i++) {
+    int pos = (height - 1) * width + i;
+    if (i == 0) {
+      sobel[i] = sobel[i + width + 1];
+      sobel[pos] = sobel[pos - width + 1];
+    }
+    else if (i == width - 1) {
+      sobel[i] = sobel[i + width - 1];
+      sobel[pos] = sobel[pos - width - 1];
+    }
+    else {
+      sobel[i] = sobel[i + width];
+      sobel[pos] = sobel[pos - width];
+    }
+  }
+  for (int j = 1; j < height - 1; j++) {
+    sobel[j * width] = sobel[j * width + 1];
+    sobel[j * width + width - 1] = sobel[j * width + width - 2];
+  }
 
   // 書き込むファイルを開く(開けなかった場合プログラムを終了)
-  if ((img_sobel = fopen("sobel_lenna.pgm", "wb")) == NULL) exit(1);
+  if ((img_sobel = fopen("sobel_airplane.pgm", "wb")) == NULL) exit(1);
 
   // ヘッダを書き込む
   fprintf(img_sobel, "P5\n%d %d\n255\n", width, height);
