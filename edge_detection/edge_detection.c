@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 void read_header(FILE *img, int *width, int *height);
 void sobel_filter(unsigned char gray[], int width, int height);
@@ -28,7 +29,7 @@ int main(int argc, char *argv[]) {
 
   sobel_filter(gray, width, height);
 
-  laplacian_filter(gray, width, height);
+  // laplacian_filter(gray, width, height);
 
   free(gray);
 
@@ -55,11 +56,51 @@ void read_header(FILE *img, int *width, int *height) {
 
 // Sobelフィルタ(gray: 元画像のデータ, width: 画像の幅, height: 画像の高さ)
 void sobel_filter(unsigned char gray[], int width, int height) {
-  FILE *img_sobel;                     // Sobelフィルタ適用後の画像ファイル
-  unsigned char sobel[width * height]; // Sobelフィルタ適用後の画像データ
+  FILE *img_sobel;                       // Sobelフィルタ適用後の画像ファイル
+  unsigned char sobel[width * height];   // Sobelフィルタ適用後の画像データ
+
+  // 元画像に水平方向と垂直のフィルタをそれぞれ適用(端以外)
+  for (int i = 1; i < width - 1; i++) {
+    for (int j = 1; j < height - 1; j++) {
+      // 注目画素の座標を求める
+      int pos = j * width + i;
+
+      // 水平方向のフィルタを適用後の近傍画素の値を求める
+      int neighbor[9];
+      neighbor[1] = neighbor[4] = neighbor[7] = 0;
+      neighbor[0] = gray[pos - width - 1] * (-1);
+      neighbor[2] = gray[pos - width + 1];
+      neighbor[3] = gray[pos - 1] * (-2);
+      neighbor[5] = gray[pos + 1] * 2;
+      neighbor[6] = gray[pos + width - 1] * (-1);
+      neighbor[8] = gray[pos + width + 1];
+
+      // 水平方向のフィルタ適用後の近傍画素の合計値を新しい値とする
+      int sum_h = 0;
+      for (int k = 0; k < 9; k++) sum_h += neighbor[k];
+
+      // 垂直方向のフィルタを適用後の近傍画素の値を求める
+      neighbor[3] = neighbor[4] = neighbor[5] = 0;
+      neighbor[0] = gray[pos - width - 1] * (-1);
+      neighbor[1] = gray[pos - width] * (-2);
+      neighbor[2] = gray[pos - width + 1] * (-1);
+      neighbor[6] = gray[pos + width - 1];
+      neighbor[7] = gray[pos + width] * 2;
+      neighbor[8] = gray[pos + width + 1];
+
+      // 垂直方向のフィルタ適用後の近傍画素の合計値を新しい値とする
+      int sum_v = 0;
+      for (int k = 0; k < 9; k++) sum_v += neighbor[k];
+
+      // Sabelフィルタを適用
+      sobel[pos] = sqrt(pow(sum_h, 2) + pow(sum_v, 2));
+    }
+  }
+
+  // ミラーリング
 
   // 書き込むファイルを開く(開けなかった場合プログラムを終了)
-  if ((img_sobel = fopen("sobel.pgm", "wb")) == NULL) exit(1);
+  if ((img_sobel = fopen("sobel_lenna.pgm", "wb")) == NULL) exit(1);
 
   // ヘッダを書き込む
   fprintf(img_sobel, "P5\n%d %d\n255\n", width, height);
@@ -76,7 +117,7 @@ void laplacian_filter(unsigned char gray[], int width, int height) {
   unsigned char lap[width * height]; // Laplacianフィルタ適用後の画像データ
 
   // 書き込むファイルを開く(開けなかった場合プログラムを終了)
-  if ((img_lap = fopen("lap.pgm", "wb")) == NULL) exit(1);
+  if ((img_lap = fopen("lap_lenna.pgm", "wb")) == NULL) exit(1);
 
   // ヘッダを書き込む
   fprintf(img_lap, "P5\n%d %d\n255\n", width, height);
