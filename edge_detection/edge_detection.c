@@ -56,8 +56,8 @@ void read_header(FILE *img, int *width, int *height) {
 
 // Sobelフィルタ(gray: 元画像のデータ, width: 画像の幅, height: 画像の高さ)
 void sobel_filter(unsigned char gray[], int width, int height) {
-  FILE *img_sobel;                       // Sobelフィルタ適用後の画像ファイル
-  unsigned char sobel[width * height];   // Sobelフィルタ適用後の画像データ
+  FILE *img_sobel;                     // Sobelフィルタ適用後の画像ファイル
+  unsigned char sobel[width * height]; // Sobelフィルタ適用後の画像データ
 
   // 元画像に水平方向と垂直のフィルタをそれぞれ適用(端以外)
   for (int i = 1; i < width - 1; i++) {
@@ -93,7 +93,8 @@ void sobel_filter(unsigned char gray[], int width, int height) {
       for (int k = 0; k < 9; k++) sum_v += neighbor[k];
 
       // Sabelフィルタを適用
-      sobel[pos] = sqrt(pow(sum_h, 2) + pow(sum_v, 2));
+      if ((int)sqrt(pow(sum_h, 2) + pow(sum_v, 2)) > 255) sobel[pos] = 255;
+      else sobel[pos] = (int)sqrt(pow(sum_h, 2) + pow(sum_v, 2));
     }
   }
 
