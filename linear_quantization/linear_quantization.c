@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 void read_header(FILE *img, int *width, int *height, int *max_grad);
 void linear_quantization(unsigned char gray[], int width, int height, int max_grad);
@@ -60,15 +61,19 @@ void linear_quantization(unsigned char gray[], int width, int height, int max_gr
 
   int after_max_grad = 16;                          // 線形量子化後の最大階調値
   int grad_times = (max_grad + 1) / after_max_grad; // 現在の階調が目標階調の何倍か
+  int sum_diff_square = 0;                          // 元画像の階調値と線形量子化後の階調値の差の2乗の総和
   for (int i = 0; i < width; i++) {
     for (int j = 0; j < width; j++) {
       // 線形量子化
       quantize[j * width + i] = (gray[j * width + i] / grad_times) * grad_times;
+
+      // 画像の階調値と線形量子化後の階調値の差の2乗
+      sum_diff_square += pow((gray[j * width + i] - quantize[j * width + i]), 2);
     }
   }
 
   // 書き込むファイルを開く(開けなかった場合プログラムを終了)
-  if ((img_quantize = fopen("quantize_airplane.pgm", "wb")) == NULL) exit(1);
+  if ((img_quantize = fopen("quantize_lenna.pgm", "wb")) == NULL) exit(1);
 
   // ヘッダを書き込む
   fprintf(img_quantize, "P5\n%d %d\n%d\n", width, height, after_max_grad);
@@ -77,5 +82,9 @@ void linear_quantization(unsigned char gray[], int width, int height, int max_gr
   fwrite(quantize, sizeof(unsigned char), width * height, img_quantize);
 
   fclose(img_quantize);
-}
 
+  // PSNR値を求める
+  double psnr = 10 * log10(pow(max_grad, 2) / ((1 / ((double)width * (double)height)) * sum_diff_square));
+
+  printf("%f\n", psnr);
+}
