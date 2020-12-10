@@ -55,12 +55,20 @@ void read_header(FILE *img, int *width, int *height, int *max_grad) {
 
 // 線形量子化(gray: 元画像のデータ, width: 画像の幅, height: 画像の高さ, max_grad: 最大階調値)
 void linear_quantization(unsigned char gray[], int width, int height, int max_grad) {
-  FILE *img_quantize;                     // 線形量子化後の画像ファイル
-  unsigned char quantize[width * height]; // 線形量子化後の画像データ
-  int after_max_grad = 16;                // 線形量子化後の最大階調値
+  FILE *img_quantize;                               // 線形量子化後の画像ファイル
+  unsigned char quantize[width * height];           // 線形量子化後の画像データ
+
+  int after_max_grad = 16;                          // 線形量子化後の最大階調値
+  int grad_times = (max_grad + 1) / after_max_grad; // 現在の階調が目標階調の何倍か
+  for (int i = 0; i < width; i++) {
+    for (int j = 0; j < width; j++) {
+      // 線形量子化
+      quantize[j * width + i] = (gray[j * width + i] / grad_times) * grad_times;
+    }
+  }
 
   // 書き込むファイルを開く(開けなかった場合プログラムを終了)
-  if ((img_quantize = fopen("quantize_lenna.pgm", "wb")) == NULL) exit(1);
+  if ((img_quantize = fopen("quantize_airplane.pgm", "wb")) == NULL) exit(1);
 
   // ヘッダを書き込む
   fprintf(img_quantize, "P5\n%d %d\n%d\n", width, height, after_max_grad);
