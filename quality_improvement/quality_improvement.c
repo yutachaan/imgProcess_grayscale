@@ -103,7 +103,7 @@ void improve_quality(RGB rgb[], unsigned char gray[], int width, int height){
   if ((img_color_high = fopen("color_high.ppm", "wb")) == NULL) exit(1);
 
   // ヘッダを書き込む
-  fprintf(img_color_high, "P6\n%d %d\n%d\n", width, height, MAX_DEPTH);
+  fprintf(img_color_high, "P6\n%d %d\n255\n", width, height);
 
   // 画像データを書き込む
   fwrite(rgb, sizeof(RGB), width * height, img_color_high);
@@ -147,9 +147,6 @@ void rgb2hsv(RGB rgb, HSV hsv[]) {
   else {
     hsv->s = (max - min) / max;
   }
-
-  // Vを求める
-  hsv->v = max;
 }
 
 // HSVをRGBに変換(hsv: HSV画像のデータ, rgb: RGB画像のデータ)
