@@ -7,8 +7,16 @@ typedef struct {
   unsigned char b;
 } RGB;
 
+typedef struct {
+  unsigned char h;
+  unsigned char s;
+  unsigned char v;
+} HSV;
+
 void read_header(FILE *img, int *width, int *height);
 void improve_quality(RGB rgb[], unsigned char gray[], int width, int height);
+void rgb2hsv(RGB rgb[], HSV hsv[]);
+void hsv2rgb(HSV hsv[], RGB rgb[]);
 
 int main(int argc, char *argv[]) {
   FILE *img_color;     // 低画質RGB画像
@@ -73,6 +81,13 @@ void read_header(FILE *img, int *width, int *height) {
 void improve_quality(RGB rgb[], unsigned char gray[], int width, int height){
   FILE *img_color_high;         // 高画質RGB画像
   RGB rgb_high[width * height]; // 高画質RGB画像データ
+  HSV hsv[width * height];      // HSV返還後の画像データ
+
+  for (int i = 0; i < width * height; i++) {
+    rgb2hsv(&rgb[i], &hsv[i]);      // 低画質RGB画像のデータをHSV画像に変換
+    hsv[i].v = gray[i];             // 輝度は高画質グレイスケール画像のものを利用
+    hsv2rgb(&hsv[i], &rgb_high[i]); // HSV画像のデータをRGB画像に変換して高画質化
+  }
 
   // 書き込むファイルを開く(開けなかった場合プログラムを終了)
   if ((img_color_high = fopen("color_high.ppm", "wb")) == NULL) exit(1);
@@ -84,4 +99,24 @@ void improve_quality(RGB rgb[], unsigned char gray[], int width, int height){
   fwrite(rgb_high, sizeof(RGB), width * height, img_color_high);
 
   fclose(img_color_high);
+}
+
+// RGBをHSVに変換(rgb: RGB画像のデータ, hsv: HSV画像のデータ)
+void rgb2hsv(RGB rgb[], HSV hsv[]) {
+  // R, G, Bを0〜1の範囲に収める
+
+  // Max, Minを求める
+
+  // H, S, Vを求める
+}
+
+// HSVをRGBに変換(hsv: HSV画像のデータ, rgb: RGB画像のデータ)
+void hsv2rgb(HSV hsv[], RGB rgb[]) {
+  // H'を求める
+
+  // fを求める
+
+  // p, q, tを求める
+
+  // R, G, Bを求める
 }
