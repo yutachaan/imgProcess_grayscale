@@ -1,5 +1,4 @@
 #include <stdio.h>
-
 #include <stdlib.h>
 
 typedef struct {
@@ -9,6 +8,7 @@ typedef struct {
 } RGB;
 
 void read_header(FILE *img, int *width, int *height);
+void improve_quality(RGB rgb[], unsigned char gray[], int width, int height);
 
 int main(int argc, char *argv[]) {
   FILE *img_color;     // 低画質RGB画像
@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
   // コマンドライン引数の数が適切でない場合プログラムを終了
   if (argc != 3) exit(1);
 
-  // 第一引数で指定された画像ファイル(低画質カラー画像)を開く(開けなかった場合プログラムを終了)
+  // 第一引数で指定された画像ファイル(低画質RGB画像)を開く(開けなかった場合プログラムを終了)
   if ((img_color = fopen(argv[1], "rb")) == NULL) exit(1);
 
   read_header(img_color, &width, &height);
@@ -41,6 +41,8 @@ int main(int argc, char *argv[]) {
 
   // 画像データの読み込み
   fread(gray, sizeof(unsigned char), width * height, img_high);
+
+  improve_quality(rgb, gray, width, height);
 
   free(rgb);
 
@@ -65,4 +67,21 @@ void read_header(FILE *img, int *width, int *height) {
 
     i++;
   }
+}
+
+// HSVによる画質の改善(rgb: RGB画像のデータ, gray: グレイスケール画像のデータ, width: 画像の幅, height: 画像の高さ)
+void improve_quality(RGB rgb[], unsigned char gray[], int width, int height){
+  FILE *img_color_high;         // 高画質RGB画像
+  RGB rgb_high[width * height]; // 高画質RGB画像データ
+
+  // 書き込むファイルを開く(開けなかった場合プログラムを終了)
+  if ((img_color_high = fopen("color_high.ppm", "wb")) == NULL) exit(1);
+
+  // ヘッダを書き込む
+  fprintf(img_color_high, "P6\n%d %d\n255\n", width, height);
+
+  // 画像データを書き込む
+  fwrite(rgb_high, sizeof(RGB), width * height, img_color_high);
+
+  fclose(img_color_high);
 }
