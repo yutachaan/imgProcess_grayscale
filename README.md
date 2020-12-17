@@ -18,6 +18,9 @@
 - 第九回: [線形量子化](https://github.com/yutachaan/img_processing/tree/master/linear_quantization)  
   ※PSNR値はairplane → 29.146487, lenna → 28.983259
 
+- 第十回: [画質改善](https://github.com/yutachaan/img_processing/tree/master/quality_improvement)  
+  ※第一引数に低画質カラー画像、第二引数に高画質グレイスケール画像のパスを指定する。
+
 実行時、第一引数に変換したい画像のパスを指定する。
 
 <a href="https://gitmoji.carloscuesta.me">
