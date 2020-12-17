@@ -2,10 +2,7 @@
 #include <stdlib.h>
 #include <float.h>
 
-// 最大値を求めるマクロ
 #define MAX(X, Y) ((X) > (Y) ? (X) : (Y))
-
-// 最小値を求めるマクロ
 #define MIN(X, Y) ((X) < (Y) ? (X) : (Y))
 
 #define MAX_DEPTH 255
@@ -30,19 +27,19 @@ void hsv2rgb(HSV hsv, RGB rgb[]);
 int main(int argc, char *argv[]) {
   FILE *img_color;     // 低画質RGB画像
   FILE *img_high;      // グレイスケール画像
-  RGB *rgb;            // RGB画像用
+  RGB *rgb;            // RGB画像データ
   unsigned char *gray; // グレイスケール画像データ
-  int width, height;   // 画像の横幅、縦幅、最大階調値
+  int width, height;   // 画像の横幅、縦幅
 
   // コマンドライン引数の数が適切でない場合プログラムを終了
   if (argc != 3) exit(1);
 
-  // 第一引数で指定された画像ファイル(低画質RGB画像)を開く(開けなかった場合プログラムを終了)
+  // 第一引数で指定された低画質RGB画像を開く
   if ((img_color = fopen(argv[1], "rb")) == NULL) exit(1);
 
   read_header(img_color, &width, &height);
 
-  // RGB画像用の配列を動的に確保(確保できなかった場合プログラムを終了)
+  // RGB画像用の配列を動的に確保
   if ((rgb = (RGB *)malloc(sizeof(RGB) * width * height)) == NULL) exit(1);
 
   // 低画質RGB画像データの読み込み
@@ -50,13 +47,15 @@ int main(int argc, char *argv[]) {
 
   fclose(img_color);
 
-  // 第二引数で指定された画像ファイル(グレイスケール画像)を開く(開けなかった場合プログラムを終了)
+  // 第二引数で指定されたグレイスケール画像を開く
   if ((img_high = fopen(argv[2], "rb")) == NULL) exit(1);
 
-  // 配列を動的に確保(確保できなかった場合プログラムを終了)
+  read_header(img_color, &width, &height);
+
+  // グレイスケール画像用の配列を動的に確保
   if ((gray = (unsigned char *)malloc(sizeof(unsigned char) * width * height)) == NULL) exit(1);
 
-  // 画像データの読み込み
+  // グレイスケール画像データの読み込み
   fread(gray, sizeof(unsigned char), width * height, img_high);
 
   fclose(img_high);
@@ -90,8 +89,8 @@ void read_header(FILE *img, int *width, int *height) {
 
 // HSVによる画質の改善(rgb: RGB画像のデータ, gray: グレイスケール画像のデータ, width: 画像の幅, height: 画像の高さ)
 void improve_quality(RGB rgb[], unsigned char gray[], int width, int height){
-  FILE *img_color_high;         // 高画質RGB画像
-  HSV hsv[width * height];      // HSV変換後の画像データ
+  FILE *img_color_high;    // 高画質RGB画像
+  HSV hsv[width * height]; // HSV変換後の画像データ
 
   for (int i = 0; i < width * height; i++) {
     rgb2hsv(rgb[i], &hsv[i]);               // 低画質RGB画像のデータをHSV画像に変換
@@ -99,15 +98,10 @@ void improve_quality(RGB rgb[], unsigned char gray[], int width, int height){
     hsv2rgb(hsv[i], &rgb[i]);               // HSV画像のデータをRGB画像に変換して高画質化
   }
 
-  // 書き込むファイルを開く(開けなかった場合プログラムを終了)
+  // 書き込み
   if ((img_color_high = fopen("color_high.ppm", "wb")) == NULL) exit(1);
-
-  // ヘッダを書き込む
   fprintf(img_color_high, "P6\n%d %d\n255\n", width, height);
-
-  // 画像データを書き込む
   fwrite(rgb, sizeof(RGB), width * height, img_color_high);
-
   fclose(img_color_high);
 }
 
@@ -118,7 +112,6 @@ void rgb2hsv(RGB rgb, HSV hsv[]) {
   double g = rgb.g / (double)MAX_DEPTH;
   double b = rgb.b / (double)MAX_DEPTH;
 
-  // Max, Minを求める
   double max = MAX(r, MAX(g, b));
   double min = MIN(r, MIN(g, b));
 
@@ -198,7 +191,7 @@ void hsv2rgb(HSV hsv, RGB rgb[]) {
   }
 
   // 最大階調値倍して代入
-  rgb->r = (int)(r * MAX_DEPTH);
-  rgb->g = (int)(g * MAX_DEPTH);
-  rgb->b = (int)(b * MAX_DEPTH);
+  rgb->r = (unsigned char)(r * MAX_DEPTH);
+  rgb->g = (unsigned char)(g * MAX_DEPTH);
+  rgb->b = (unsigned char)(b * MAX_DEPTH);
 }
