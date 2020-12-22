@@ -25,7 +25,7 @@ void rgb2hsv(RGB rgb, HSV hsv[]);
 void hsv2rgb(HSV hsv, RGB rgb[]);
 
 int main(int argc, char *argv[]) {
-  FILE *img_color;     // 低画質RGB画像
+  FILE *img_low;     // 低画質RGB画像
   FILE *img_high;      // グレイスケール画像
   RGB *rgb;            // RGB画像データ
   unsigned char *gray; // グレイスケール画像データ
@@ -35,22 +35,22 @@ int main(int argc, char *argv[]) {
   if (argc != 3) exit(1);
 
   // 第一引数で指定された低画質RGB画像を開く
-  if ((img_color = fopen(argv[1], "rb")) == NULL) exit(1);
+  if ((img_low = fopen(argv[1], "rb")) == NULL) exit(1);
 
-  read_header(img_color, &width, &height);
+  read_header(img_low, &width, &height);
 
   // RGB画像用の配列を動的に確保
   if ((rgb = (RGB *)malloc(sizeof(RGB) * width * height)) == NULL) exit(1);
 
   // 低画質RGB画像データの読み込み
-  fread(rgb, sizeof(RGB), width * height, img_color);
+  fread(rgb, sizeof(RGB), width * height, img_low);
 
-  fclose(img_color);
+  fclose(img_low);
 
   // 第二引数で指定されたグレイスケール画像を開く
   if ((img_high = fopen(argv[2], "rb")) == NULL) exit(1);
 
-  read_header(img_color, &width, &height);
+  read_header(img_low, &width, &height);
 
   // グレイスケール画像用の配列を動的に確保
   if ((gray = (unsigned char *)malloc(sizeof(unsigned char) * width * height)) == NULL) exit(1);
@@ -89,7 +89,7 @@ void read_header(FILE *img, int *width, int *height) {
 
 // HSVによる画質の改善(rgb: RGB画像のデータ, gray: グレイスケール画像のデータ, width: 画像の幅, height: 画像の高さ)
 void improve_quality(RGB rgb[], unsigned char gray[], int width, int height){
-  FILE *img_color_high;    // 高画質RGB画像
+  FILE *img_high_rgb;    // 高画質RGB画像
   HSV hsv[width * height]; // HSV変換後の画像データ
 
   for (int i = 0; i < width * height; i++) {
@@ -99,10 +99,10 @@ void improve_quality(RGB rgb[], unsigned char gray[], int width, int height){
   }
 
   // 書き込み
-  if ((img_color_high = fopen("color_high.ppm", "wb")) == NULL) exit(1);
-  fprintf(img_color_high, "P6\n%d %d\n255\n", width, height);
-  fwrite(rgb, sizeof(RGB), width * height, img_color_high);
-  fclose(img_color_high);
+  if ((img_high_rgb = fopen("color_high.ppm", "wb")) == NULL) exit(1);
+  fprintf(img_high_rgb, "P6\n%d %d\n255\n", width, height);
+  fwrite(rgb, sizeof(RGB), width * height, img_high_rgb);
+  fclose(img_high_rgb);
 }
 
 // RGBをHSVに変換(rgb: RGB画像のデータ, hsv: HSV画像のデータ)
