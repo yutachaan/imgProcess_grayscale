@@ -116,30 +116,16 @@ void rgb2hsv(RGB rgb, HSV hsv[]) {
   double min = MIN(r, MIN(g, b));
 
   // Hを求める
-  if (max == min) {
-    hsv->h = DBL_MAX;
-  }
-  else if (max == r) {
-    hsv->h = 60 * (g - b) / (max - min);
-  }
-  else if (max == g) {
-    hsv->h = 60 * (b - r) / (max - min) + 120;
-  }
-  else {
-    hsv->h = 60 * (r - g) / (max - min) + 240;
-  }
+  if (max == min) hsv->h = DBL_MAX;
+  else if (max == r) hsv->h = 60 * (g - b) / (max - min);
+  else if (max == g) hsv->h = 60 * (b - r) / (max - min) + 120;
+  else hsv->h = 60 * (r - g) / (max - min) + 240;
 
-  if (hsv->h < 0) {
-    hsv->h += 360;
-  }
+  if (hsv->h < 0) hsv->h += 360;
 
   // Sを求める
-  if (max == 0) {
-    hsv->s = 0;
-  }
-  else {
-    hsv->s = (max - min) / max;
-  }
+  if (max == 0) hsv->s = 0;
+  else hsv->s = (max - min) / max;
 }
 
 // HSVをRGBに変換(hsv: HSV画像のデータ, rgb: RGB画像のデータ)
