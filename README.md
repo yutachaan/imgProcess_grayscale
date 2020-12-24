@@ -21,6 +21,9 @@
 - 第十回: [画質改善](https://github.com/yutachaan/img_processing/tree/master/quality_improvement)  
   ※第一引数に低画質カラー画像、第二引数に高画質グレイスケール画像のパスを指定する。
 
+- 第十一回: [歪み除去](https://github.com/yutachaan/img_processing/tree/master/affine_transformation)  
+  ※第一引数に入力画像、第二引数に目的画像のパスを指定する。
+
 実行時、第一引数に変換したい画像のパスを指定する。
 
 <a href="https://gitmoji.carloscuesta.me">
