@@ -2,24 +2,29 @@
 #include <stdlib.h>
 
 void read_header(FILE *img, int *width, int *height);
-void nearest_neighbor(unsigned char gray[], int width, int height);
+void remove_distortion(unsigned char gray[], int width1, int height1, int width2, int height2);
 
 int main(int argc, char *argv[]) {
-  FILE *img;           // 元画像
-  int width, height;   // 画像の横幅, 縦幅
-  unsigned char *gray; // グレイスケール画像データ
+  FILE *img1, *img2;                    // 画像
+  int width1, height1, width2, height2; // 画像の横幅, 縦幅
+  unsigned char *gray1;                 // グレイスケール画像データ
 
-  // ファイルを開いて画像データを読み込む
-  if ((img = fopen(argv[1], "rb")) == NULL) exit(1);
-  read_header(img, &width, &height);
-  if ((gray = (unsigned char *)malloc(sizeof(unsigned char) * width * height)) == NULL) exit(1);
-  fread(gray, sizeof(unsigned char), width * height, img);
-  fclose(img);
+  // 入力画像を読み込む
+  if ((img1 = fopen(argv[1], "rb")) == NULL) exit(1);
+  read_header(img1, &width1, &height1);
+  if ((gray1 = (unsigned char *)malloc(sizeof(unsigned char) * width1 * height1)) == NULL) exit(1);
+  fread(gray1, sizeof(unsigned char), width1 * height1, img1);
+  fclose(img1);
+
+  // 目的画像を読み込む
+  if ((img2 = fopen(argv[2], "rb")) == NULL) exit(1);
+  read_header(img2, &width2, &height2);
+  fclose(img2);
 
   // 幾何学的歪みの除去
-  nearest_neighbor(gray, width, height);
+  remove_distortion(gray1, width1, height1, width2, height2);
 
-  free(gray);
+  free(gray1);
 
   return 0;
 }
@@ -42,22 +47,31 @@ void read_header(FILE *img, int *width, int *height) {
   }
 }
 
-// ニアレストネイバー法による幾何学的歪みの除去(gray: 元画像データ, width: 画像の幅, height: 画像の高さ)
-void nearest_neighbor(unsigned char gray[], int width, int height) {
-  FILE *img_after;                          // 歪み除去後の画像ファイル
-  unsigned char gray_after[width * height]; // 歪み除去後の画像データ
+// 幾何学的歪みの除去(gray: 元画像データ, width1, height1: 入力画像の幅と高さ, width2, height2: 目的画像の幅と高さ)
+void remove_distortion(unsigned char gray[], int width1, int height1, int width2, int height2) {
+  FILE *img_after;                            // 歪み除去後の画像ファイル
+  unsigned char gray_after[width2 * height2]; // 歪み除去後の画像データ
 
-  int pos;
-  for (int i = 0; i < width; i++) {
-    for (int j = 0; j < height; j++) {
-      pos = j * width + i;
-      gray_after[pos] = gray[pos];
+  // 初期化
+  for (int i = 0; i < width2; i++) {
+    for (int j = 0; j < height2; j++) {
+      gray_after[j * width2 + i] = 0;
+    }
+  }
+
+  // アフィン変換
+  int x, y;
+  for (int i = 0; i < width1; i++) {
+    for (int j = 0; j < height1; j++) {
+      x = (int)(0.610322056 * i - 0.080224435 * j + 121.1989055);
+      y = (int)(0.124733194 * i + 0.601439888 * j + 15.21494566);
+      gray_after[y * width2 + x] = gray[j * width1 + i];
     }
   }
 
   // ファイルに書き込む
   if ((img_after = fopen("affine.pgm", "wb")) == NULL) exit(1);
-  fprintf(img_after, "P5\n%d %d\n255\n", width, height);
-  fwrite(gray_after, sizeof(unsigned char), width * height, img_after);
+  fprintf(img_after, "P5\n%d %d\n255\n", width2, height2);
+  fwrite(gray_after, sizeof(unsigned char), width2 * height2, img_after);
   fclose(img_after);
 }
