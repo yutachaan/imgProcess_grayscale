@@ -5,7 +5,7 @@
 #define HEIGHT 256
 
 void skip_header(FILE *img);
-int labeling(unsigned char gray[WIDTH][HEIGHT], unsigned char gray_lab[WIDTH][HEIGHT], int x, int y, int label);
+int labeling(unsigned char gray[][HEIGHT], unsigned char gray_lab[][HEIGHT], int x, int y, int label);
 
 int main(int argc, char *argv[]) {
   FILE *img;                         // 画像
@@ -26,16 +26,20 @@ int main(int argc, char *argv[]) {
   }
 
   // ラベリング処理後の画像データの初期化
-  unsigned char gray_lab[WIDTH][HEIGHT] = {0};
+  unsigned char gray_lab[WIDTH][HEIGHT];
+  for (int i = 0; i < WIDTH; i++) {
+    for (int j = 0; j < HEIGHT; j++) {
+      gray_lab[i][j] = 0;
+    }
+  }
 
   // ラベリング処理
   int label = 1;
   for (int i = 0; i < WIDTH; i++) {
     for (int j = 0; j < HEIGHT; j++) {
-      if (gray[i][j] == 0 && gray_lab[i][j] != 0) {
+      if (gray[i][j] == 0) {
         labeling(gray, gray_lab, i, j, label);
         label++;
-        printf("%d\n", label);
       }
     }
   }
@@ -49,11 +53,11 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
-// ヘッダをスキップ(img: 画像のファイルポインタ)
+// ヘッダーをスキップ(img: 画像のファイルポインタ)
 void skip_header(FILE *img) {
   char buf[256];
-  int i;
 
+  int i = 0;
   while (i < 3) {
     fgets(buf, sizeof(buf), img);
     if (buf[0] == '#') continue;
@@ -62,7 +66,8 @@ void skip_header(FILE *img) {
 }
 
 // ラベリング(gray: 2値化済みのグレイスケール画像のデータ, gray_lab: ラベリング後の画像データ, x: x座標, y: y座標, label: ラベル値)
-int labeling(unsigned char gray[WIDTH][HEIGHT], unsigned char gray_lab[WIDTH][HEIGHT], int x, int y, int label) {
+int labeling(unsigned char gray[][HEIGHT], unsigned char gray_lab[][HEIGHT], int x, int y, int label) {
+  // 多分ここの条件式がたりない
   if (gray_lab[x][y] != 0 || x < 0 || x > WIDTH || y < 0 || y > HEIGHT) return 1;
   gray_lab[x][y] = label;
   return (labeling(gray, gray_lab, x - 1, y - 1, label) + labeling(gray, gray_lab, x,     y - 1, label) +
