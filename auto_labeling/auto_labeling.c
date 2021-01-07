@@ -54,6 +54,7 @@ void binarize(unsigned char gray[], int width, int height) {
   // 分散比が最大となる閾値を求める
   for (int t = 1; t < 255; t++) {
     n1 = n2 = sum1 = sum2 = sum_square1 = sum_square2 = 0;
+
     // 画素数、合計値、2乗の合計値を求める
     for (int i = 0; i < width * height; i++) {
       if (gray[i] < t) {
@@ -81,6 +82,7 @@ void binarize(unsigned char gray[], int width, int height) {
     var_w = (n1 * pow(var1, 2) + n2 * pow(var2, 2)) / (n1 + n2);
     var_b = (n1 * pow(mean1 - mean, 2) + n2 * pow(mean2 - mean, 2)) / (n1 + n2);
 
+    // 分散比と閾値の更新
     if (var_b / var_w > s) {
       s = var_b / var_w;
       t_res = t;
