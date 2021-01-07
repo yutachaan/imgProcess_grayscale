@@ -1,14 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
-
-#define MAX_DEPTH 255
 
 void read_header(FILE *img, int *width, int *height);
-void binarize(unsigned char gray[], int width, int height);
+void labeling(unsigned char gray[], unsigned char lab[], int pos, int width, int height, int label);
 
 int main(int argc, char *argv[]) {
   FILE *img;           // 画像
+  FILE *img_lab;       // ラベリング処理後の画像
   int width, height;   // 画像の横幅, 縦幅
   unsigned char *gray; // グレイスケール画像データ
 
@@ -19,7 +17,34 @@ int main(int argc, char *argv[]) {
   fread(gray, sizeof(unsigned char), width * height, img);
   fclose(img);
 
-  binarize(gray, width, height);
+  // 画像を2値化
+  for (int i = 0; i < width * height; i++) {
+    gray[i] = (gray[i] >= 128) ? 255 : 0;
+  }
+
+  // ラベリング処理後の画像データの初期化
+  unsigned char gray_lab[width * height];
+  for (int i = 0; i < width * height; i++) {
+    gray_lab[i] = 0;
+  }
+
+  // ラベリング処理
+  int pos, label;
+  for (int i = 0; i < width; i++) {
+    for (int j = 0; j < height; j++) {
+      pos = j * width + i;
+      if (gray[pos] == 255 && gray_lab[pos] == 0) {
+        label++;
+        labeling(gray, gray_lab, pos, width, height, label);
+      }
+    }
+  }
+
+  // ファイルに書き込む
+  if ((img_lab = fopen("labeling.pgm", "wb")) == NULL) exit(1);
+  fprintf(img_lab, "P5\n%d %d\n255\n", width, height);
+  fwrite(gray_lab, sizeof(unsigned char), width * height, img_lab);
+  fclose(img_lab);
 
   free(gray);
 
@@ -44,53 +69,35 @@ void read_header(FILE *img, int *width, int *height) {
   }
 }
 
-// 判別分析法を用いて画像を2値化(gray: 元画像のデータ, width: 画像幅, height: 画像高さ)
-void binarize(unsigned char gray[], int width, int height) {
-  int t_res, n1, n2, sum1, sum2, sum_square1, sum_square2; // グループ1と2の画素数・合計値・2乗の合計値
-  double mean, var1, mean1, var2, mean2, var_w, var_b, s;  // 全体の平均、グループ1と2の分散・平均、クラス内分散、クラス間分散、分散比
-
-  s = 0;
-
-  // 分散比が最大となる閾値を求める
-  for (int t = 1; t < 255; t++) {
-    n1 = n2 = sum1 = sum2 = sum_square1 = sum_square2 = 0;
-
-    // 画素数、合計値、2乗の合計値を求める
-    for (int i = 0; i < width * height; i++) {
-      if (gray[i] < t) {
-        // グループ1
-        n1++;
-        sum1 += gray[i];
-        sum_square1 += pow(gray[i], 2);
-      }
-      else {
-        // グループ2
-        n2++;
-        sum2 += gray[i];
-        sum_square2 += pow(gray[i], 2);
-      }
-    }
-
-    // 平均、分散を求める
-    mean1 = sum1 / n1;
-    var1 = sum_square1 / n1 - pow(mean1, 2);
-    mean2 = sum2 / n2;
-    var2 = sum_square2 / n2 - pow(mean2, 2);
-    mean = (sum1 + sum2) / (n1 + n2);
-
-    // クラス内分散、クラス間分散を求める
-    var_w = (n1 * pow(var1, 2) + n2 * pow(var2, 2)) / (n1 + n2);
-    var_b = (n1 * pow(mean1 - mean, 2) + n2 * pow(mean2 - mean, 2)) / (n1 + n2);
-
-    // 分散比と閾値の更新
-    if (var_b / var_w > s) {
-      s = var_b / var_w;
-      t_res = t;
-    }
+// ラベリング(gray: 2値化済みのグレイスケール画像のデータ, gray_lab: ラベリング後の画像データ, pos: 座標)
+void labeling(unsigned char gray[], unsigned char gray_lab[], int pos, int width, int height, int label) {
+  if (gray[pos + 1] == 255) {
+    labeling(gray, gray_lab, pos + 1, width, height, label);
+  }
+  else {
+    gray_lab[pos] = label;
   }
 
-  // 2値化
-  for (int i = 0; i < width * height; i++) {
-    gray[i] = (gray[i] >= t_res) ? 255 : 0;
+  if (gray[pos + width - 1] == 255) {
+    labeling(gray, gray_lab, pos + width - 1, width, height, label);
   }
+  else {
+    gray_lab[pos] = label;
+  }
+
+  if (gray[pos + width] == 255) {
+    labeling(gray, gray_lab, pos + width, width, height, label);
+  }
+  else {
+    gray_lab[pos] = label;
+  }
+
+  if (gray[pos + width + 1] == 255) {
+    labeling(gray, gray_lab, pos + width + 1, width, height, label);
+  }
+  else {
+    gray_lab[pos] = label;
+  }
+
+  printf("%d, %d\n", label, pos);
 }
