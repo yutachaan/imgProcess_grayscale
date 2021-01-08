@@ -18,28 +18,23 @@ int main(int argc, char *argv[]) {
   fread(gray, sizeof(unsigned char), WIDTH * HEIGHT, img);
   fclose(img);
 
-  // 画像を2値化
-  for (int i = 0; i < WIDTH; i++) {
-    for (int j = 0; j < HEIGHT; j++) {
-      gray[i][j] = (gray[i][j] >= 100) ? 255 : 0;
-    }
-  }
-
-  // ラベリング処理後の画像データの初期化
+  // 画像を2値化&ラベリング処理後の画像データを初期化
   unsigned char gray_lab[WIDTH][HEIGHT];
   for (int i = 0; i < WIDTH; i++) {
     for (int j = 0; j < HEIGHT; j++) {
+      gray[i][j] = (gray[i][j] >= 100) ? 255 : 0;
       gray_lab[i][j] = 0;
     }
   }
 
   // ラベリング処理
-  int label = 1;
+  int label;
   for (int i = 0; i < WIDTH; i++) {
     for (int j = 0; j < HEIGHT; j++) {
-      if (gray[i][j] == 0) {
+      // 背景でなく、まだラベルが設定されていない場合
+      if (gray[i][j] == 0 && gray_lab[i][j] == 0) {
+        label+=5;
         labeling(gray, gray_lab, i, j, label);
-        label += 1;
       }
     }
   }
@@ -57,7 +52,7 @@ int main(int argc, char *argv[]) {
 void skip_header(FILE *img) {
   char buf[256];
 
-  int i = 0;
+  int i = 1;
   while (i < 3) {
     fgets(buf, sizeof(buf), img);
     if (buf[0] == '#') continue;
@@ -67,10 +62,12 @@ void skip_header(FILE *img) {
 
 // ラベリング(gray: 2値化済みのグレイスケール画像のデータ, gray_lab: ラベリング後の画像データ, x: x座標, y: y座標, label: ラベル値)
 int labeling(unsigned char gray[][HEIGHT], unsigned char gray_lab[][HEIGHT], int x, int y, int label) {
-  // 多分ここの条件式がたりない
-  printf("%3d, %3d, %3d, %3d\n", x, y, gray[x][y], gray_lab[x][y]);
-  if (gray[x][y] == 255 || gray_lab[x][y] != 0 || x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT) return 1;
+  // 枠外の場合、背景の場合、既にラベルが設定されている場合は終了
+  if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT || gray[x][y] == 255 || gray_lab[x][y] != 0) return 1;
+
   gray_lab[x][y] = label;
+
+  // 8近傍に対して再帰
   return (labeling(gray, gray_lab, x - 1, y - 1, label) + labeling(gray, gray_lab, x,     y - 1, label) +
           labeling(gray, gray_lab, x + 1, y - 1, label) + labeling(gray, gray_lab, x - 1, y,     label) +
           labeling(gray, gray_lab, x + 1, y,     label) + labeling(gray, gray_lab, x - 1, y + 1, label) +
