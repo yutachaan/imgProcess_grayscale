@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
   // 画像を2値化
   for (int i = 0; i < WIDTH; i++) {
     for (int j = 0; j < HEIGHT; j++) {
-      gray[i][j] = (gray[i][j] >= 128) ? 255 : 0;
+      gray[i][j] = (gray[i][j] >= 100) ? 255 : 0;
     }
   }
 
@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
     for (int j = 0; j < HEIGHT; j++) {
       if (gray[i][j] == 0) {
         labeling(gray, gray_lab, i, j, label);
-        label++;
+        label += 1;
       }
     }
   }
@@ -68,7 +68,8 @@ void skip_header(FILE *img) {
 // ラベリング(gray: 2値化済みのグレイスケール画像のデータ, gray_lab: ラベリング後の画像データ, x: x座標, y: y座標, label: ラベル値)
 int labeling(unsigned char gray[][HEIGHT], unsigned char gray_lab[][HEIGHT], int x, int y, int label) {
   // 多分ここの条件式がたりない
-  if (gray_lab[x][y] != 0 || x < 0 || x > WIDTH || y < 0 || y > HEIGHT) return 1;
+  printf("%3d, %3d, %3d, %3d\n", x, y, gray[x][y], gray_lab[x][y]);
+  if (gray[x][y] == 255 || gray_lab[x][y] != 0 || x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT) return 1;
   gray_lab[x][y] = label;
   return (labeling(gray, gray_lab, x - 1, y - 1, label) + labeling(gray, gray_lab, x,     y - 1, label) +
           labeling(gray, gray_lab, x + 1, y - 1, label) + labeling(gray, gray_lab, x - 1, y,     label) +
