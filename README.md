@@ -11,7 +11,7 @@
 - 第五回: [ノイズ除去・鮮鋭化](https://github.com/yutachaan/img_processing/tree/master/denoise_and_sharp)
 
 - 第六回: [2値化・ディザ](https://github.com/yutachaan/img_processing/tree/master/binarize_and_dither)  
-  ※課題1は固定しきい値法を使用
+  ※課題1は固定しきい値法を使用。
 
 - 第八回: [エッジ検出](https://github.com/yutachaan/img_processing/tree/master/edge_detection)
 
@@ -23,6 +23,9 @@
 
 - 第十一回: [歪み除去](https://github.com/yutachaan/img_processing/tree/master/affine_transformation)  
   ※第一引数に入力画像、第二引数に目的画像のパスを指定する。
+
+- 第十二回: [自動ラベリング](https://github.com/yutachaan/img_processing/tree/master/auto_labeling)  
+  ※見やすいようにラベル値は5ずつ増加させている。
 
 実行時、第一引数に変換したい画像のパスを指定する。
 
