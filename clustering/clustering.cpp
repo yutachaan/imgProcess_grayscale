@@ -1,137 +1,77 @@
-#include "stdafx.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include <string.h>
-#define GNUPLOT_PATH "C:/gnuplot/bin/gnuplot.exe"
 
-#define INPUTNO 2       // Number of inputs
-#define MAXINPUTNO 500  // Maximum size of data
-#define N 256
+#define INPUTNO 2
+#define MAXINPUTNO 500
 
-void plot_data(void);
-void getdata(double data_[][INPUTNO], double data_category[], int *mm, int *nn);
-void savedata(double data_[][INPUTNO], double output[MAXINPUTNO], int *mm, int *nn);
-
+void read_data(double data[][INPUTNO], double data_category[], int *m_, int *n_);
+void savedata(double data[][INPUTNO], double output[MAXINPUTNO], int *m_, int *n_);
 
 int main() {
-		int ii, jj;
-		int mm, nn;
-		double data_[MAXINPUTNO][INPUTNO]; // dataset
-		double data_category[MAXINPUTNO];  // data category
-		double output[MAXINPUTNO];         // output value*
+		int m_, n_;
+		double data[MAXINPUTNO][INPUTNO]; // データセット
+		double data_category[MAXINPUTNO]; // 分類済みデータのカテゴリ
+		double output[MAXINPUTNO];        // 未分類データのクラスタリング後のカテゴリ
 
-		getdata(data_, data_category, &mm, &nn);
+		read_data(data, data_category, &m_, &n_);
 
-		printf("Number of data:%d\n", nn);
-		printf("------------------------\n");
-		printf("Input data        |  output\n", nn);
-
-		// Computation should be done here
-		for (ii = 0; ii<nn; ii++) {
-			printf("%d:", ii);
-			for (jj = 0; jj<INPUTNO; jj++)	printf("%lf ", data_[ii][jj]);
-			output[ii] = data_category[ii];
-			printf(" | %lf\n", output[ii]);
+		// ここをクラスタリング処理に変える
+		for (int i = 0; i < n_; i++) {
+			output[i] = data_category[i];
 		}
 
-		savedata(data_, output, &mm, &nn);
-		plot_data();
+		savedata(data, output, &m_, &n_);
 
 	return 0;
 }
 
-void savedata(double data_[][INPUTNO], double output[MAXINPUTNO], int *mm_, int *nn_) {
-	int mm, nn;
-	int nx;
-
+// データを読み込む
+void read_data(double data[][INPUTNO], double data_category[], int *m_, int *n_) {
 	FILE *fin;
-	char  filename[] = "./data/data_saved.txt";
-	mm = (*mm_);
-	nn = (*nn_);
-	if ((fin = fopen(filename, "w")) == NULL) {
-		fprintf(stderr, "Can't open file\n");
-	}
-	else {
-		fprintf(fin, "#\tx\ty\tz\n");
-		for (int ii = 0; ii < nn; ii++) {
-			for (int jj = 0; jj < mm; jj++)	fprintf(fin, "\t%.4f", data_[ii][jj]);
-			fprintf(fin, "\t%.4f\n", output[ii]);
-		}
-		fclose(fin);
-	}
+	int m, n;      // 列数、行数
+	char buf[256];
 
-	return;
-}
+	if ((fin = fopen("resources/data_01.txt", "r")) == NULL) exit(1);
 
-void plot_data() {
-	FILE *gp;
-	// Call Gnuplot
-	if ((gp = _popen(GNUPLOT_PATH, "w")) == NULL) {   //Use pipe to boot gnuplot
-		fprintf(stderr, "Not Found %s.", GNUPLOT_PATH);
-		exit(EXIT_FAILURE);
-	}
-	fprintf(gp, "set term wxt  0\n");
-	fprintf(gp, "reset\n");
-	fprintf(gp, "unset label\n");
-	fprintf(gp, "unset key\n");
-	fprintf(gp, "unset grid\n");
-	fprintf(gp, "show grid\n");
-	fprintf(gp, "set title \"Data\"\n");
-	fprintf(gp, "set xlabel \"x\"\n");
-	fprintf(gp, "set ylabel \"y\"\n");
-	fprintf(gp, "set terminal wxt size 1000, 1000 font \"Verdana,10\"\n");
-	fprintf(gp, "set size ratio - 1\n");
-	fprintf(gp, "set palette rgbformulae 22, 13, -31\n");
-	fprintf(gp, "set pm3d map # no interpolation\n");
-	fprintf(gp, "set term wxt  1\n");
-	fprintf(gp, "splot 'data/data_saved.txt' using 1:2:3 with points palette pointsize 1 pointtype 7\n");
+	n = 0;
+	while (fgets(buf, sizeof(buf), fin) != NULL) {
+		char *token = strtok(buf, " ");        // 空白で区切った字句へのポインタ
+		m = 0;
 
-	fflush(gp);            //Flush the buffer
-	system("pause");
-	fprintf(gp, "exit\n"); //End the Gnu plot
-	_pclose(gp);
-
-	return;
-}
-
-
-
-void getdata(double data_[][INPUTNO], double data_category[], int *mm_, int *nn_) {
-	int mm, nn;
-	char  filename[] = "./data/data_01.txt";
-	char readline[N] = { '\0' };
-
-	char temp_str;
-	FILE *fin;
-	char delim[] = " ";
-
-	if ((fin = fopen(filename, "r")) == NULL) {
-		fprintf(stderr, "Can't open file\n");
-	}
-
-	nn = 0;
-	while (fgets(readline, N, fin) != NULL) {
-		char * token = strtok(readline, delim);
-		mm = 0;
+		// 字句が見つかった時
 		while (token != NULL) {
-			if (mm<2) {
-				data_[nn][mm] = atof(token);
-				//printf("%3.3g ", data_[nn][mm]);
-			}
-			else {
-				data_category[nn] = atof(token);
-				//printf(" category=%3.3g\n ", data_category[nn]);
-			}
-			token = strtok(NULL, delim);
-			mm++;
+			if (m < 2) data[n][m] = atof(token); // 最初の2つの字句はdoubleへ変換してdataに代入
+			else data_category[n] = atof(token); // 最後の1つの字句はdoubleへ変換してdata_categoryに代入
+			token = strtok(NULL, " ");           // 次の字句へ移動
+			m++;
 		}
-		nn++;
-	}
-	fclose(fin);
-	mm = 2;
-	(*mm_) = mm;
-	(*nn_) = nn;
 
-	return;
+		n++;
+	}
+
+	fclose(fin);
+
+	*m_ = 2;
+	*n_ = n;
+}
+
+// クラスタリング後のデータを保存
+void savedata(double data[][INPUTNO], double output[MAXINPUTNO], int *m_, int *n_) {
+	FILE *fin;
+	int m, n;
+
+	if ((fin = fopen("data_saved.txt", "w")) == NULL) exit(1);
+
+	fprintf(fin, "# x y z\n");
+
+	// データとカテゴリを出力
+	for (int i = 0; i < *n_; i++) {
+		for (int j = 0; j < *m_; j++)	{
+			fprintf(fin, "\t%.4f", data[i][j]);
+		}
+		fprintf(fin, "\t%.4f\n", output[i]);
+	}
+
+	fclose(fin);
 }
