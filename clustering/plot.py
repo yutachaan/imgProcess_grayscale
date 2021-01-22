@@ -2,6 +2,7 @@ import sys
 import csv
 import matplotlib.pyplot as plt
 
+# 第一引数(分類前)のプロット
 with open(sys.argv[1]) as f:
   reader = csv.reader(f)
   l1 = [row for row in reader]
@@ -11,6 +12,7 @@ for row in l1:
 
 plt.show()
 
+# 第二引数(分類後)のプロット
 with open(sys.argv[2]) as f:
   reader = csv.reader(f)
   l2 = [row for row in reader]
