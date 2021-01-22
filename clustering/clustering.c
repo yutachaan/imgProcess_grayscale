@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <float.h>
+#include <math.h>
 
 #define INPUTNO 2
 #define MAXINPUTNO 500
@@ -24,13 +26,13 @@ int main(int argc, char *argv[]) {
   read_data(argv[2], coord2, category2, &n2);
 
   // data02(未分類)を保存する
-  save_data("data02_before.csv", coord2, category2, n2);
+  save_data("out/data02_before.csv", coord2, category2, n2);
 
   // 最近傍法
   nearest_neighbor(coord1, category1, n1, coord2, category2, n2);
 
   // data02(分類後)を保存する
-  save_data("data02_after.csv", coord2, category2, n2);
+  save_data("out/data02_after1.csv", coord2, category2, n2);
 
   return 0;
 }
@@ -76,15 +78,13 @@ void save_data(char filename[], double coord[][INPUTNO], double category[], int 
 
   if ((data = fopen(filename, "w")) == NULL) exit(1);
 
-  fprintf(data, "# x y z\n");
-
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < 2; j++) {
       // 座標を記述
-      fprintf(data, "\t%.4f", coord[i][j]);
+      fprintf(data, "%.4f,", coord[i][j]);
     }
     // カテゴリを記述
-    fprintf(data, "\t%.4f\n", category[i]);
+    fprintf(data, "%.4f\n", category[i]);
   }
 
   fclose(data);
@@ -92,5 +92,21 @@ void save_data(char filename[], double coord[][INPUTNO], double category[], int 
 
 // 最近傍法(coord1: 分類済みデータの座標, category1: 分類済みデータのカテゴリ, n1: 分類済みデータの行数, coord2: 未分類データの座標, category2: 未分類データのカテゴリ, n2: 未分類データの行数)
 void nearest_neighbor(double coord1[][INPUTNO], double category1[], int n1, double coord2[][INPUTNO], double category2[], int n2) {
-  
+  double d;     // 最近傍のユークリッド距離
+  double d_tmp; // ユークリッド距離
+
+  for (int i = 0; i < n2; i++) {
+    d = DBL_MAX;
+
+    for (int j = 0; j < n1; j++) {
+      // ユークリッド距離を求める
+      d_tmp = sqrt(pow(coord1[j][0] - coord2[i][0], 2) + pow(coord1[j][1] - coord2[i][1], 2));
+
+      // dよりも短かった場合
+      if (d_tmp < d) {
+        d = d_tmp;                   // dを更新
+        category2[i] = category1[j]; // カテゴライズ
+      }
+    }
+  }
 }
