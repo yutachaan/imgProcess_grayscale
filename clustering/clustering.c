@@ -7,19 +7,18 @@
 
 void read_data(char *fileloc, double coord[][INPUTNO], double category[], int *n);
 void save_data(char filename[], double coord[][INPUTNO], double category[], int n);
+void nearest_neighbor(double coord1[][INPUTNO], double category1[], int n1, double coord2[][INPUTNO], double category2[], int n2);
 
 int main(int argc, char *argv[]) {
   int m = 2;                          // 列数
-  int n, n2;                          // 行数
+  int n1, n2;                          // 行数
   double coord1[MAXINPUTNO][INPUTNO]; // data01の座標
   double category1[MAXINPUTNO];       // data01のカテゴリ
   double coord2[MAXINPUTNO][INPUTNO]; // data02の座標
   double category2[MAXINPUTNO];       // data02のカテゴリ
 
-  m = 2;
-
   // data01(分類済みデータ)を読み込む
-  read_data(argv[1], coord1, category1, &n);
+  read_data(argv[1], coord1, category1, &n1);
 
   // data02(未分類データ)を読み込む
   read_data(argv[2], coord2, category2, &n2);
@@ -28,6 +27,7 @@ int main(int argc, char *argv[]) {
   save_data("data02_before.csv", coord2, category2, n2);
 
   // 最近傍法
+  nearest_neighbor(coord1, category1, n1, coord2, category2, n2);
 
   // data02(分類後)を保存する
   save_data("data02_after.csv", coord2, category2, n2);
@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
-// データを読み込む
+// データを読み込む(fileloc: 読み込むファイル, coord: 座標保存用, category: カテゴリ保存用, n: 行数保存用)
 void read_data(char *fileloc, double coord[][INPUTNO], double category[], int *n) {
   FILE *data;
   int m_, n_;    // 列、行
@@ -70,7 +70,7 @@ void read_data(char *fileloc, double coord[][INPUTNO], double category[], int *n
   *n = n_;
 }
 
-// データを保存
+// データを保存(filename: 保存するファイル名, coord: 座標, category: カテゴリー, n: 行数)
 void save_data(char filename[], double coord[][INPUTNO], double category[], int n) {
   FILE *data;
 
@@ -88,4 +88,9 @@ void save_data(char filename[], double coord[][INPUTNO], double category[], int 
   }
 
   fclose(data);
+}
+
+// 最近傍法(coord1: 分類済みデータの座標, category1: 分類済みデータのカテゴリ, n1: 分類済みデータの行数, coord2: 未分類データの座標, category2: 未分類データのカテゴリ, n2: 未分類データの行数)
+void nearest_neighbor(double coord1[][INPUTNO], double category1[], int n1, double coord2[][INPUTNO], double category2[], int n2) {
+  
 }
