@@ -19,11 +19,17 @@ void save_data(char filename[], double coord[][INPUTNO], int category[], int n);
 int cmp(const void * p, const void * q);
 
 int main(int argc, char *argv[]) {
-  int n1, n2;                         // 行数
+  int n1, n2, n3, n4;                 // 行数
   double coord1[MAXINPUTNO][INPUTNO]; // data01の座標
   int category1[MAXINPUTNO];          // data01のカテゴリ
   double coord2[MAXINPUTNO][INPUTNO]; // data02の座標
   int category2[MAXINPUTNO];          // data02のカテゴリ
+  double coord3[MAXINPUTNO][INPUTNO]; // data03の座標
+  int category3[MAXINPUTNO];          // data03のカテゴリ
+  double coord4[MAXINPUTNO][INPUTNO]; // data04の座標
+  int category4[MAXINPUTNO];          // data04のカテゴリ
+
+  // <---------- データの読み込み・未分類データの出力 ---------->
 
   // data01(分類済みデータ)を読み込む
   read_data(argv[1], coord1, category1, &n1);
@@ -34,11 +40,27 @@ int main(int argc, char *argv[]) {
   // data02(未分類)を保存する
   save_data("out/data02_before.csv", coord2, category2, n2);
 
+  // data03(未分類データ)を読み込む
+  read_data(argv[3], coord3, category3, &n3);
+
+  // data03(未分類)を保存する
+  save_data("out/data03_before.csv", coord3, category3, n3);
+
+  // data04(未分類データ)を読み込む
+  read_data(argv[4], coord4, category4, &n4);
+
+  // data04(未分類)を保存する
+  save_data("out/data04_before.csv", coord4, category4, n4);
+
+  // <----------- 課題1 ---------->
+
   // 最近傍法
   nearest_neighbor(coord1, category1, n1, coord2, category2, n2);
 
   // data02(分類後)を保存する
   save_data("out/data02_after1.csv", coord2, category2, n2);
+
+  // <---------- 課題2 ----------->
 
   // k-最近傍法(k: 奇数)
   k_nearest_neighbor(coord1, category1, n1, coord2, category2, n2, 5);
@@ -51,6 +73,10 @@ int main(int argc, char *argv[]) {
 
   // data02(分類後)を保存する
   save_data("out/data02_after2_even.csv", coord2, category2, n2);
+
+  // <----------　課題3 ----------->
+
+  // k-平均法
 
   return 0;
 }
