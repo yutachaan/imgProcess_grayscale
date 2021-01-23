@@ -23,5 +23,4 @@ for i in range(int(sys.argv[3])):
   for row in l2:
     if int(row[2]) == i + 1:
       plt.plot(float(row[0]), float(row[1]), marker='.', c=cmap(i))
-      print(int(row[2]))
 plt.show()

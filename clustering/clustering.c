@@ -74,13 +74,13 @@ int main(int argc, char *argv[]) {
 
   // <----------　課題3 ----------->
   // k-平均法
-  k_means(coord3, category3, n3, 2);
+  // k_means(coord3, category3, n3, 2);
 
   // data03(分類後)を保存する
-  save_data("out/data03_after.csv", coord3, category3, n3);
+  // save_data("out/data03_after.csv", coord3, category3, n3);
 
   // k-平均法
-  k_means(coord4, category4, n4, 3);
+  k_means(coord4, category4, n4, 5);
 
   // data03(分類後)を保存する
   save_data("out/data04_after.csv", coord4, category4, n4);
@@ -181,17 +181,17 @@ void k_means(double coord[][INPUTNO], int category[], int n, int k) {
 
       // 最も近い重心のクラスタに分類
       category[j] = dis[0].i + 1;
-      num[dis[0].i]++;
+      // num[dis[0].i]++;
       sum[dis[0].i][0] += coord[j][0];
       sum[dis[0].i][1] += coord[j][1];
+
+      if ((g[dis[0].i][0] != coord[j][0] || g[dis[0].i][1] != coord[j][1])) num[dis[0].i]++;
     }
 
     // 重心を求める
     for (i = 0; i < k; i++) {
-      if (num[i] != 0) {
-        g_tmp[i][0] = sum[i][0] / num[i];
-        g_tmp[i][1] = sum[i][1] / num[i];
-      }
+      g_tmp[i][0] = sum[i][0] / num[i];
+      g_tmp[i][1] = sum[i][1] / num[i];
     }
   }
 }
