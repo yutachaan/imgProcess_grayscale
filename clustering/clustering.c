@@ -5,11 +5,11 @@
 #include <math.h>
 
 #define INPUTNO 2
-#define MAXINPUTNO 420
+#define MAXINPUTNO 450
 
 typedef struct {
-  int i;    // 行番号
-  double d; // 距離
+  int i;      // 行番号
+  double d;   // 距離
 } distance_t;
 
 void nearest_neighbor(double coord1[][INPUTNO], int category1[], int n1, double coord2[][INPUTNO], int category2[], int n2);
@@ -17,7 +17,7 @@ void k_nearest_neighbor(double coord1[][INPUTNO], int category1[], int n1, doubl
 void k_means(double coord[][INPUTNO], int category[], int n, int k);
 void read_data(char *fileloc, double coord[][INPUTNO], int category[], int *n);
 void save_data(char filename[], double coord[][INPUTNO], int category[], int n);
-int cmp_distance(const void * p, const void * q);
+int cmp(const void * p, const void * q);
 
 int main(int argc, char *argv[]) {
   int n1, n2, n3, n4;                 // 行数
@@ -74,13 +74,13 @@ int main(int argc, char *argv[]) {
 
   // <----------　課題3 ----------->
   // k-平均法
-  // k_means(coord3, category3, n3, 2);
+  k_means(coord3, category3, n3, 2);
 
   // data03(分類後)を保存する
-  // save_data("out/data03_after.csv", coord3, category3, n3);
+  save_data("out/data03_after.csv", coord3, category3, n3);
 
   // k-平均法
-  k_means(coord4, category4, n4, 5);
+  k_means(coord4, category4, n4, 10);
 
   // data03(分類後)を保存する
   save_data("out/data04_after.csv", coord4, category4, n4);
@@ -88,7 +88,8 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
-// 最近傍法(coord1: 分類済みデータの座標, category1: 分類済みデータのカテゴリ, n1: 分類済みデータの行数, coord2: 未分類データの座標, category2: 未分類データのカテゴリ, n2: 未分類データの行数)
+// 最近傍法(coord1: 分類済みデータの座標, category1: 分類済みデータのカテゴリ, n1: 分類済みデータの行数,
+//        coord2: 未分類データの座標, category2: 未分類データのカテゴリ, n2: 未分類データの行数)
 void nearest_neighbor(double coord1[][INPUTNO], int category1[], int n1, double coord2[][INPUTNO], int category2[], int n2) {
   double d;     // 最近傍のユークリッド距離
   double d_tmp; // ユークリッド距離
@@ -113,7 +114,7 @@ void nearest_neighbor(double coord1[][INPUTNO], int category1[], int n1, double 
 //           coord2: 未分類データの座標, category2: 未分類データのカテゴリ, n2: 未分類データの行数, k: 何近傍か)
 void k_nearest_neighbor(double coord1[][INPUTNO], int category1[], int n1, double coord2[][INPUTNO], int category2[], int n2, int k) {
   int num1, num2;     // 各クラスタに分類された数
-  distance_t dis[n1];
+  distance_t dis[n1]; // 分類済みデータの各座標までの距離
 
   for (int i = 0; i < n2; i++) {
     num1 = num2 = 0;
@@ -125,7 +126,7 @@ void k_nearest_neighbor(double coord1[][INPUTNO], int category1[], int n1, doubl
     }
 
     // 構造体を距離でソート(昇順)
-    qsort(dis, n1, sizeof(distance_t), cmp_distance);
+    qsort(dis, n1, sizeof(distance_t), cmp);
 
     // 距離が短い順に上位k個について、各クラスタの数を求める
     for (int j = 0; j < k; j++) {
@@ -148,8 +149,8 @@ void k_means(double coord[][INPUTNO], int category[], int n, int k) {
 
   // 重心の初期化
   for (int j = 0; j < k; j++) {
-    g_tmp[j][0] = coord[(n / k) * (j + 1) - 1][0];
-    g_tmp[j][1] = coord[(n / k) * (j + 1) - 1][1];
+    g_tmp[j][0] = coord[(n / k) * j][0];
+    g_tmp[j][1] = coord[(n / k) * j][1];
   }
 
   int i;
@@ -164,7 +165,7 @@ void k_means(double coord[][INPUTNO], int category[], int n, int k) {
     for (i = 0; i < k; i++) {
       g[i][0] = g_tmp[i][0];
       g[i][1] = g_tmp[i][1];
-      num[i] = 1;
+      num[i] = 0;
       sum[i][0] = 0;
       sum[i][1] = 0;
     }
@@ -177,21 +178,21 @@ void k_means(double coord[][INPUTNO], int category[], int n, int k) {
       }
 
       // 距離をソート(昇順)
-      qsort(dis, k, sizeof(distance_t), cmp_distance);
+      qsort(dis, k, sizeof(distance_t), cmp);
 
       // 最も近い重心のクラスタに分類
       category[j] = dis[0].i + 1;
-      // num[dis[0].i]++;
+      num[dis[0].i]++;
       sum[dis[0].i][0] += coord[j][0];
       sum[dis[0].i][1] += coord[j][1];
-
-      if ((g[dis[0].i][0] != coord[j][0] || g[dis[0].i][1] != coord[j][1])) num[dis[0].i]++;
     }
 
     // 重心を求める
     for (i = 0; i < k; i++) {
-      g_tmp[i][0] = sum[i][0] / num[i];
-      g_tmp[i][1] = sum[i][1] / num[i];
+      if (num[i] != 0) {
+        g_tmp[i][0] = sum[i][0] / num[i];
+        g_tmp[i][1] = sum[i][1] / num[i];
+      }
     }
   }
 }
@@ -245,6 +246,9 @@ void save_data(char filename[], double coord[][INPUTNO], int category[], int n) 
   fclose(data);
 }
 
-int cmp_distance(const void *p, const void *q) {
-  return ((distance_t*)p)->d - ((distance_t*)q)->d;
+// qsort()の比較用関数
+int cmp(const void *p, const void *q) {
+	if (((distance_t *)p)->d > ((distance_t *)q)->d) return 1;
+	else if (((distance_t *)p)->d < ((distance_t *)q)->d) return -1;
+	else return 0;
 }
