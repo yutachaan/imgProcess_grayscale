@@ -5,18 +5,19 @@
 #include <math.h>
 
 #define INPUTNO 2
-#define MAXINPUTNO 500
+#define MAXINPUTNO 420
 
 typedef struct {
-  int i;    // 何行目か
+  int i;    // 行番号
   double d; // 距離
 } distance_t;
 
 void nearest_neighbor(double coord1[][INPUTNO], int category1[], int n1, double coord2[][INPUTNO], int category2[], int n2);
 void k_nearest_neighbor(double coord1[][INPUTNO], int category1[], int n1, double coord2[][INPUTNO], int category2[], int n2, int k);
+void k_means(double coord[][INPUTNO], int category[], int n, int k);
 void read_data(char *fileloc, double coord[][INPUTNO], int category[], int *n);
 void save_data(char filename[], double coord[][INPUTNO], int category[], int n);
-int cmp(const void * p, const void * q);
+int cmp_distance(const void * p, const void * q);
 
 int main(int argc, char *argv[]) {
   int n1, n2, n3, n4;                 // 行数
@@ -30,7 +31,6 @@ int main(int argc, char *argv[]) {
   int category4[MAXINPUTNO];          // data04のカテゴリ
 
   // <---------- データの読み込み・未分類データの出力 ---------->
-
   // data01(分類済みデータ)を読み込む
   read_data(argv[1], coord1, category1, &n1);
 
@@ -53,7 +53,6 @@ int main(int argc, char *argv[]) {
   save_data("out/data04_before.csv", coord4, category4, n4);
 
   // <----------- 課題1 ---------->
-
   // 最近傍法
   nearest_neighbor(coord1, category1, n1, coord2, category2, n2);
 
@@ -61,7 +60,6 @@ int main(int argc, char *argv[]) {
   save_data("out/data02_after1.csv", coord2, category2, n2);
 
   // <---------- 課題2 ----------->
-
   // k-最近傍法(k: 奇数)
   k_nearest_neighbor(coord1, category1, n1, coord2, category2, n2, 5);
 
@@ -75,8 +73,17 @@ int main(int argc, char *argv[]) {
   save_data("out/data02_after2_even.csv", coord2, category2, n2);
 
   // <----------　課題3 ----------->
+  // k-平均法
+  k_means(coord3, category3, n3, 2);
+
+  // data03(分類後)を保存する
+  save_data("out/data03_after.csv", coord3, category3, n3);
 
   // k-平均法
+  k_means(coord4, category4, n4, 3);
+
+  // data03(分類後)を保存する
+  save_data("out/data04_after.csv", coord4, category4, n4);
 
   return 0;
 }
@@ -102,9 +109,10 @@ void nearest_neighbor(double coord1[][INPUTNO], int category1[], int n1, double 
   }
 }
 
-// k-最近傍法(coord1: 分類済みデータの座標, category1: 分類済みデータのカテゴリ, n1: 分類済みデータの行数, coord2: 未分類データの座標, category2: 未分類データのカテゴリ, n2: 未分類データの行数, k: 何近傍か)
+// k-最近傍法(coord1: 分類済みデータの座標, category1: 分類済みデータのカテゴリ, n1: 分類済みデータの行数,
+//           coord2: 未分類データの座標, category2: 未分類データのカテゴリ, n2: 未分類データの行数, k: 何近傍か)
 void k_nearest_neighbor(double coord1[][INPUTNO], int category1[], int n1, double coord2[][INPUTNO], int category2[], int n2, int k) {
-  int num1, num2;     // 各カテゴリに分類された数
+  int num1, num2;     // 各クラスタに分類された数
   distance_t dis[n1];
 
   for (int i = 0; i < n2; i++) {
@@ -117,16 +125,74 @@ void k_nearest_neighbor(double coord1[][INPUTNO], int category1[], int n1, doubl
     }
 
     // 構造体を距離でソート(昇順)
-    qsort(dis, n1, sizeof(distance_t), cmp);
+    qsort(dis, n1, sizeof(distance_t), cmp_distance);
 
-    // 距離が短い順に上位k個について、各カテゴリの数を求める
+    // 距離が短い順に上位k個について、各クラスタの数を求める
     for (int j = 0; j < k; j++) {
       if (category1[dis[j].i] == 1) num1++;
       else num2++;
     }
 
-    // 数が多い方のカテゴリに分類
+    // 数が多い方のクラスタに分類
     category2[i] = num1 > num2 ? 1 : 2;
+  }
+}
+
+// k-平均法(coord: 座標, category: カテゴリ, n: 行数, k: クラスタ数)
+void k_means(double coord[][INPUTNO], int category[], int n, int k) {
+  distance_t dis[k];  // 各重心からの距離
+  double num[k];      // 各クラスタに分類された数
+  double sum[k][2];   // 各クラスタに分類された座標の合計値
+  double g[k][2];     // 各クラスタの重心の座標
+  double g_tmp[k][2]; // 各クラスタの重心の座標(一時保持)
+
+  // 重心の初期化
+  for (int j = 0; j < k; j++) {
+    g_tmp[j][0] = coord[(n / k) * (j + 1) - 1][0];
+    g_tmp[j][1] = coord[(n / k) * (j + 1) - 1][1];
+  }
+
+  int i;
+  while (1) {
+    // 重心が変化していなければ終了
+    for (i = 0; i < k; i++) {
+      if ((g[i][0] != g_tmp[i][0]) || g[i][1] != g_tmp[i][1]) break;
+    }
+    if (i == k) break;
+
+    // 重心が変化している場合、重心を更新し処理を続行
+    for (i = 0; i < k; i++) {
+      g[i][0] = g_tmp[i][0];
+      g[i][1] = g_tmp[i][1];
+      num[i] = 1;
+      sum[i][0] = 0;
+      sum[i][1] = 0;
+    }
+
+    for (int j = 0; j < n; j++) {
+      // 各重心からの距離を求める
+      for (i = 0; i < k; i++) {
+        dis[i].i = i;
+        dis[i].d = sqrt(pow(g[i][0] - coord[j][0], 2) + pow(g[i][1] - coord[j][1], 2));
+      }
+
+      // 距離をソート(昇順)
+      qsort(dis, k, sizeof(distance_t), cmp_distance);
+
+      // 最も近い重心のクラスタに分類
+      category[j] = dis[0].i + 1;
+      num[dis[0].i]++;
+      sum[dis[0].i][0] += coord[j][0];
+      sum[dis[0].i][1] += coord[j][1];
+    }
+
+    // 重心を求める
+    for (i = 0; i < k; i++) {
+      if (num[i] != 0) {
+        g_tmp[i][0] = sum[i][0] / num[i];
+        g_tmp[i][1] = sum[i][1] / num[i];
+      }
+    }
   }
 }
 
@@ -173,13 +239,12 @@ void save_data(char filename[], double coord[][INPUTNO], int category[], int n) 
     for (int j = 0; j < 2; j++) {
       fprintf(data, "%.4f,", coord[i][j]); // 座標を記述
     }
-    fprintf(data, "%d\n", category[i]);    // カテゴリを記述
+    fprintf(data, "%d\n", category[i]);    // クラスタを記述
   }
 
   fclose(data);
 }
 
-// 比較用の関数
-int cmp(const void *p, const void *q) {
+int cmp_distance(const void *p, const void *q) {
   return ((distance_t*)p)->d - ((distance_t*)q)->d;
 }
