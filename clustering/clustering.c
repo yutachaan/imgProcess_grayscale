@@ -8,7 +8,7 @@
 #define MAXINPUTNO 450
 
 typedef struct {
-  int i;      // 行番号
+  int i;      // 番号
   double d;   // 距離
 } distance_t;
 
@@ -36,18 +36,21 @@ int main(int argc, char *argv[]) {
 
   // data02(未分類データ)を読み込む
   read_data(argv[2], coord2, category2, &n2);
+  for (int i = 0; i < n2; i++) category2[i] = 0;
 
   // data02(未分類)を保存する
   save_data("out/data02_before.csv", coord2, category2, n2);
 
   // data03(未分類データ)を読み込む
   read_data(argv[3], coord3, category3, &n3);
+  for (int i = 0; i < n3; i++) category3[i] = 0;
 
   // data03(未分類)を保存する
   save_data("out/data03_before.csv", coord3, category3, n3);
 
   // data04(未分類データ)を読み込む
   read_data(argv[4], coord4, category4, &n4);
+  for (int i = 0; i < n4; i++) category4[i] = 0;
 
   // data04(未分類)を保存する
   save_data("out/data04_before.csv", coord4, category4, n4);
@@ -57,20 +60,22 @@ int main(int argc, char *argv[]) {
   nearest_neighbor(coord1, category1, n1, coord2, category2, n2);
 
   // data02(分類後)を保存する
-  save_data("out/data02_after1.csv", coord2, category2, n2);
+  save_data("out/data02_after.csv", coord2, category2, n2);
 
   // <---------- 課題2 ----------->
   // k-最近傍法(k: 奇数)
-  k_nearest_neighbor(coord1, category1, n1, coord2, category2, n2, 5);
+  for (int i = 0; i < n2; i++) category2[i] = 0;
+  k_nearest_neighbor(coord1, category1, n1, coord2, category2, n2, 3);
 
   // data02(分類後)を保存する
-  save_data("out/data02_after2_odd.csv", coord2, category2, n2);
+  save_data("out/data02_after_odd.csv", coord2, category2, n2);
 
   // k-最近傍法(k: 偶数)
-  k_nearest_neighbor(coord1, category1, n1, coord2, category2, n2, 6);
+  for (int i = 0; i < n2; i++) category2[i] = 0;
+  k_nearest_neighbor(coord1, category1, n1, coord2, category2, n2, 4);
 
   // data02(分類後)を保存する
-  save_data("out/data02_after2_even.csv", coord2, category2, n2);
+  save_data("out/data02_after_even.csv", coord2, category2, n2);
 
   // <----------　課題3 ----------->
   // k-平均法
