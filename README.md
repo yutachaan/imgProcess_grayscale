@@ -27,6 +27,10 @@
 - 第十二回: [自動ラベリング](https://github.com/yutachaan/img_processing/tree/master/auto_labeling)  
   ※見やすいようにラベル値は5ずつ増加させている。
 
+- 第十三回: [クラスタリング](https://github.com/yutachaan/img_processing/tree/master/clustering)  
+  ※第一引数にdata_01、第二引数にdata_02、第三引数にdata_03、第四引数にdata_04を指定する。  
+  ※プロットは、第一引数に分類前のデータ、第二引数に分類後のデータをそれぞれcsvで指定し、第三引数にクラスタ数(最大10)を指定する。
+
 実行時、第一引数に変換したい画像のパスを指定する。
 
 <a href="https://gitmoji.carloscuesta.me">
