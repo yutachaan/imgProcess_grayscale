@@ -36,21 +36,18 @@ int main(int argc, char *argv[]) {
 
   // data02(未分類データ)を読み込む
   read_data(argv[2], coord2, category2, &n2);
-  for (int i = 0; i < n2; i++) category2[i] = 0;
 
   // data02(未分類)を保存する
   save_data("out/data02_before.csv", coord2, category2, n2);
 
   // data03(未分類データ)を読み込む
   read_data(argv[3], coord3, category3, &n3);
-  for (int i = 0; i < n3; i++) category3[i] = 0;
 
   // data03(未分類)を保存する
   save_data("out/data03_before.csv", coord3, category3, n3);
 
   // data04(未分類データ)を読み込む
   read_data(argv[4], coord4, category4, &n4);
-  for (int i = 0; i < n4; i++) category4[i] = 0;
 
   // data04(未分類)を保存する
   save_data("out/data04_before.csv", coord4, category4, n4);
@@ -64,14 +61,12 @@ int main(int argc, char *argv[]) {
 
   // <---------- 課題2 ----------->
   // k-最近傍法(k: 奇数)
-  for (int i = 0; i < n2; i++) category2[i] = 0;
   k_nearest_neighbor(coord1, category1, n1, coord2, category2, n2, 3);
 
   // data02(分類後)を保存する
   save_data("out/data02_after_odd.csv", coord2, category2, n2);
 
   // k-最近傍法(k: 偶数)
-  for (int i = 0; i < n2; i++) category2[i] = 0;
   k_nearest_neighbor(coord1, category1, n1, coord2, category2, n2, 4);
 
   // data02(分類後)を保存する
@@ -99,6 +94,8 @@ void nearest_neighbor(double coord1[][INPUTNO], int category1[], int n1, double 
   double d;     // 最近傍のユークリッド距離
   double d_tmp; // ユークリッド距離
 
+  for (int i = 0; i < n2; i++) category2[i] = 0;
+
   for (int i = 0; i < n2; i++) {
     d = DBL_MAX;
 
@@ -106,7 +103,6 @@ void nearest_neighbor(double coord1[][INPUTNO], int category1[], int n1, double 
       // ユークリッド距離を求める
       d_tmp = sqrt(pow(coord1[i2][0] - coord2[i][0], 2) + pow(coord1[i2][1] - coord2[i][1], 2));
 
-      // dよりも短かった場合
       if (d_tmp < d) {
         d = d_tmp;                    // dを更新
         category2[i] = category1[i2]; // カテゴライズ
@@ -120,6 +116,8 @@ void nearest_neighbor(double coord1[][INPUTNO], int category1[], int n1, double 
 void k_nearest_neighbor(double coord1[][INPUTNO], int category1[], int n1, double coord2[][INPUTNO], int category2[], int n2, int k) {
   int num1, num2;     // 各クラスタに分類された数
   distance_t dis[n1]; // 分類済みデータの各座標までの距離
+
+  for (int i = 0; i < n2; i++) category2[i] = 0;
 
   for (int i = 0; i < n2; i++) {
     num1 = num2 = 0;
@@ -151,6 +149,8 @@ void k_means(double coord[][INPUTNO], int category[], int n, int k) {
   double sum[k][2];   // 各クラスタに分類された座標の合計値
   double g[k][2];     // 各クラスタの重心の座標
   double g_tmp[k][2]; // 各クラスタの重心の座標(一時保持)
+
+  for (int i = 0; i < n; i++) category[i] = 0;
 
   // 重心の初期化
   for (int j = 0; j < k; j++) {
@@ -211,7 +211,6 @@ void read_data(char *fileloc, double coord[][INPUTNO], int category[], int *n) {
   if ((data = fopen(fileloc, "r")) == NULL) exit(1);
 
   nn = 0;
-  // 一行ずつ読み込む
   while (fgets(buf, sizeof(buf), data) != NULL) {
     mm = 0;
     char *token = strtok(buf, " ");            // 空白で区切った最初の数字へのポインタ
@@ -225,13 +224,11 @@ void read_data(char *fileloc, double coord[][INPUTNO], int category[], int *n) {
       mm++;
     }
 
-    // 行数をカウント
     nn++;
   }
 
   fclose(data);
 
-  // 行数を返す
   *n = nn;
 }
 
