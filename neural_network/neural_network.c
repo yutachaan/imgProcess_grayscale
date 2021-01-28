@@ -113,7 +113,7 @@ void save_data(char filename[], double coord[][INPUTNO], double output[], int n)
   if ((data = fopen(filename, "w")) == NULL) exit(1);
 
   for (int i = 0; i < n; i++) {
-    fprintf(data, "%.4f %.4f %.4f\n", coord[i][0], coord[i][1], output[i]);
+    fprintf(data, "%.4f,%.4f,%.4f\n", coord[i][0], coord[i][1], output[i]);
   }
 
   fclose(data);
