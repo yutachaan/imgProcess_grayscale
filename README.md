@@ -31,6 +31,10 @@
   ※第一引数にdata_01、第二引数にdata_02、第三引数にdata_03、第四引数にdata_04を指定する。  
   ※プロットは、第一引数に分類前のデータ、第二引数に分類後のデータをそれぞれcsvで指定し、第三引数にクラスタ数(最大10)を指定する。
 
+- 第十四回: [ニューラルネットワーク基礎](https://github.com/yutachaan/img_processing/tree/master/neural_network)  
+  ※第一引数にdata01, 第二引数にdata02，第三引数にdata03を指定する．  
+  ※プロットは，第一引数に分類前のデータ，第二引数に分類後のデータを指定する．
+
 実行時、第一引数に変換したい画像のパスを指定する。
 
 <a href="https://gitmoji.carloscuesta.me">
