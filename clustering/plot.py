@@ -13,7 +13,7 @@ for row in l1:
   plt.plot(float(row[0]), float(row[1]), marker='.', c='blue')
 plt.show()
 
-# 分類後のプロット(第三引数で)
+# 分類後のプロット
 with open(sys.argv[2]) as f2:
   reader = csv.reader(f2)
   l2 = [row for row in reader]
