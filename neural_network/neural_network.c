@@ -8,7 +8,6 @@
 #define HIDDENNO 2
 
 double f_step(double u);
-double f_sigmoid(double u);
 void read_data(char *fileloc, double coord[][INPUTNO], int *n);
 void save_data(char filename[], double coord[][INPUTNO], double output[], int n);
 void simple_perceptron(double coord[][INPUTNO], double output[], double weight[], int n);
@@ -192,9 +191,4 @@ void save_data(char filename[], double coord[][INPUTNO], double output[], int n)
 double f_step(double u) {
 	if (u >= 0) return 1.0;
 	else return 0;
-}
-
-// シグモイド関数
-double f_sigmoid(double u) {
-	return 1.0 / (1.0 + exp(-u));
 }
