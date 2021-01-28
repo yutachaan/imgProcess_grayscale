@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
   save_data("out/data03_or.csv", coord3, output3, n3);
 
   // <----------- 課題1(AND分類器) ---------->
-  double weight_and[INPUTNO + 1] = {1, 1, 1}; // ここの最後の数字が違う気がする
+  double weight_and[INPUTNO + 1] = {1, 1, 1.2};
 
   // data01
   simple_perceptron(coord1, output1, weight_and, n1);
@@ -72,6 +72,8 @@ int main(int argc, char *argv[]) {
   // data03
   simple_perceptron(coord3, output3, weight_and, n3);
   save_data("out/data03_and.csv", coord3, output3, n3);
+
+  // <----------- 課題2(XOR分類器) ---------->
 
   return 0;
 }
