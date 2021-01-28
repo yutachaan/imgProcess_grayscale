@@ -44,19 +44,34 @@ int main(int argc, char *argv[]) {
   save_data("out/data03_before.csv", coord3, output3, n3);
 
   // <----------- 課題1(OR分類器) ---------->
-  double weight1[INPUTNO + 1] = {1, 1, 0.5};
+  double weight_or[INPUTNO + 1] = {1, 1, 0.5};
 
   // data01
-  simple_perceptron(coord1, output1, weight1, n1);
+  simple_perceptron(coord1, output1, weight_or, n1);
   save_data("out/data01_or.csv", coord1, output1, n1);
 
-  // // data02
-  simple_perceptron(coord2, output2, weight1, n2);
+  // data02
+  simple_perceptron(coord2, output2, weight_or, n2);
   save_data("out/data02_or.csv", coord2, output2, n2);
 
-  // // data03
-  simple_perceptron(coord3, output3, weight1, n3);
+  // data03
+  simple_perceptron(coord3, output3, weight_or, n3);
   save_data("out/data03_or.csv", coord3, output3, n3);
+
+  // <----------- 課題1(AND分類器) ---------->
+  double weight_and[INPUTNO + 1] = {1, 1, 1}; // ここの最後の数字が違う気がする
+
+  // data01
+  simple_perceptron(coord1, output1, weight_and, n1);
+  save_data("out/data01_and.csv", coord1, output1, n1);
+
+  // data02
+  simple_perceptron(coord2, output2, weight_and, n2);
+  save_data("out/data02_and.csv", coord2, output2, n2);
+
+  // data03
+  simple_perceptron(coord3, output3, weight_and, n3);
+  save_data("out/data03_and.csv", coord3, output3, n3);
 
   return 0;
 }
