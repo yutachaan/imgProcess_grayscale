@@ -1,8 +1,15 @@
+# VSCode
+.vscode/
+
+# Clang
 *.dSYM/
 a.out
-.vscode/
+
+# MacOS
 .DS_Store
-考察.md
-報告書.md
-images/
+
+# レポート関連
 *.pdf
+images/
+報告書*
+考察.md
