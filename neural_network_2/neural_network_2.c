@@ -16,8 +16,10 @@ int main(int argc, char *argv[]) {
   int teacher[MAXINPUTNO];
   double output[MAXINPUTNO];
 
+  // データの読み込み
   read_data(argv[1], input, teacher, &n);
-  for (int i = 0; i < n; i++) output[i] = 0;
+
+  // 学習済みデータの出力
   save_data("out/data_after.csv", input, teacher, output, n);
 }
 
@@ -58,9 +60,9 @@ void save_data(char filename[], double input[][INPUTNO], int teacher[], double o
 
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < 3; j++) {
-      fprintf(data, "%d,", (int)input[i][j]);
+      fprintf(data, "%d,", (int)input[i][j]);          // inputを記述
     }
-    fprintf(data, "%d,%.4f\n", teacher[i], output[i]);
+    fprintf(data, "%d,%.4f\n", teacher[i], output[i]); // 教師データと学習結果を記述
   }
 
   fclose(data);
