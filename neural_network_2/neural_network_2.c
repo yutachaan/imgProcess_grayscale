@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
   double err = DBL_MAX;    // 誤差
   double err_data[200];    // 誤差の変移
   int count = 0;           // 繰り返し回数
-  while (err > LIMIT) {
+  while (count < 200) {
     err = 0;
     for (int i = 0; i < n; i++) {
       output[i] = forward(input, wh, wo, hidden, i);           // 出力値を計算
@@ -59,6 +59,11 @@ int main(int argc, char *argv[]) {
     }
     err_data[count] = err;
     count++;
+
+    for (int i = 0; i < HIDDENNO; i++) {
+      for (int j = 0; j <= INPUTNO; j++) printf("%f,", wh[i][j]);
+    }
+    printf("\n");
   }
 
   // 学習済みデータの出力
