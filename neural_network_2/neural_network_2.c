@@ -15,7 +15,7 @@ double f_sigmoid(double u);
 void read_data(char *fileloc, double input[][INPUTNO], int teacher[], int *n);
 void save_data(char filename[], double input[][INPUTNO], int teacher[], double output[], int n);
 void save_err(char filename[], double err_data[], int n);
-double forward(double data[], double wh[][INPUTNO + 1], double wo[], double hi[]);
+double forward(double input[][INPUTNO], double wh[][INPUTNO + 1], double wo[], double hi[], int i);
 void olearn(int teacher, double wo[], double hi[], double output);
 void hlearn(double data[], int teacher, double wh[][INPUTNO + 1], double wo[], double hi[], double output);
 
@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
   while (err > LIMIT) {
     err = 0;
     for (int i = 0; i < n; i++) {
-      output[i] = forward(input[i], wh, wo, hidden);           // 出力値を計算
+      output[i] = forward(input, wh, wo, hidden, i);           // 出力値を計算
       olearn(teacher[i], wo, hidden, output[i]);               // 出力層の重みを更新
       hlearn(input[i], teacher[i], wh, wo, hidden, output[i]); // 隠れ層の重みを更新
       err += pow((output[i] - teacher[i]), 2);                 // 誤差を計算
@@ -71,20 +71,20 @@ int main(int argc, char *argv[]) {
 }
 
 // 出力値を計算(data: 1行分のインプット, wh: 隠れ層の重み, wo: 出力層の重み, hi: 隠れ層での値)
-double forward(double data[], double wh[][INPUTNO + 1], double wo[], double hi[]) {
+double forward(double input[][INPUTNO], double wh[][INPUTNO + 1], double wo[], double hi[], int i) {
   double u, o; // 入力に重みを掛けた値(u: 隠れ層, o: 出力層)
 
   // 隠れ層の値を求める
-  for (int i = 0; i < HIDDENNO; i++) {
+  for (int j = 0; j < HIDDENNO; j++) {
     u = 0;
-    for (int j = 0; j < INPUTNO; j++) u += data[j] * wh[i][j];
-    u -= wh[i][INPUTNO];
-    hi[i] = f_sigmoid(u);
+    for (int k = 0; k < INPUTNO; k++) u += input[i][k] * wh[j][k];
+    u -= wh[j][INPUTNO];
+    hi[j] = f_sigmoid(u);
   }
 
   // 出力層の値を求めて返却
   o = 0;
-  for (int i = 0; i < HIDDENNO; i++) o += hi[i] * wo[i];
+  for (int j = 0; j < HIDDENNO; j++) o += hi[j] * wo[j];
   o -= wo[HIDDENNO];
   return f_sigmoid(o);
 }
