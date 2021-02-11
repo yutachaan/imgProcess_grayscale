@@ -14,6 +14,7 @@
 double f_sigmoid(double u);
 void read_data(char *fileloc, double input[][INPUTNO], int teacher[], int *n);
 void save_data(char filename[], double input[][INPUTNO], int teacher[], double output[], int n);
+void save_err(char filename[], double err_data[], int n);
 double forward(double data[], double wh[][INPUTNO + 1], double wo[], double hi[]);
 void olearn(int teacher, double wo[], double hi[], double output);
 void hlearn(double data[], int teacher, double wh[][INPUTNO + 1], double wo[], double hi[], double output);
@@ -46,17 +47,25 @@ int main(int argc, char *argv[]) {
   // <---------- 学習 ---------->
   double hidden[HIDDENNO]; // 隠れ層での値
   double err = DBL_MAX;    // 誤差
+  double err_data[200];    // 誤差の変移
+  int count = 0;           // 繰り返し回数
   while (err > LIMIT) {
     err = 0;
     for (int i = 0; i < n; i++) {
-      output[i] = forward(input[i], wh, wo, hidden); // 出力値を計算
-      olearn(teacher[i], wo, hidden, output[i]);     // 出力層の重みを更新
+      output[i] = forward(input[i], wh, wo, hidden);           // 出力値を計算
+      olearn(teacher[i], wo, hidden, output[i]);               // 出力層の重みを更新
       hlearn(input[i], teacher[i], wh, wo, hidden, output[i]); // 隠れ層の重みを更新
+      err += pow((output[i] - teacher[i]), 2);                 // 誤差を計算
     }
+    err_data[count] = err;
+    count++;
   }
 
   // 学習済みデータの出力
   save_data("out/data_after.csv", input, teacher, output, n);
+
+  // 誤差の変移の出力
+  save_err("out/err.csv", err_data, count);
 
   return 0;
 }
@@ -148,6 +157,19 @@ void save_data(char filename[], double input[][INPUTNO], int teacher[], double o
       fprintf(data, "%d,", (int)input[i][j]);          // inputを記述
     }
     fprintf(data, "%d,%.4f\n", teacher[i], output[i]); // 教師データと学習結果を記述
+  }
+
+  fclose(data);
+}
+
+// エラーの変移を保存(filaname: 保存するファイル名, err_data: エラーの変移, n: 行数)
+void save_err(char filename[], double err_data[], int n) {
+  FILE *data;
+
+  if ((data = fopen(filename, "w")) == NULL) exit(1);
+
+  for (int i = 0; i < n; i++) {
+    fprintf(data, "%d,%.4f\n", i, err_data[i]);
   }
 
   fclose(data);
