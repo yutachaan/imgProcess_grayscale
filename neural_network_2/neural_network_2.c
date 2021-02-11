@@ -14,8 +14,9 @@
 double f_sigmoid(double u);
 void read_data(char *fileloc, double input[][INPUTNO], int teacher[], int *n);
 void save_data(char filename[], double input[][INPUTNO], int teacher[], double output[], int n);
-double forward(double e[], double wh[][INPUTNO + 1], double wo[], double hi[]);
+double forward(double data[], double wh[][INPUTNO + 1], double wo[], double hi[]);
 void olearn(int teacher, double wo[], double hi[], double output);
+void hlearn(double data[], int teacher, double wh[][INPUTNO + 1], double wo[], double hi[], double output);
 
 int main(int argc, char *argv[]) {
   int n;                             // 行数
@@ -50,6 +51,7 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < n; i++) {
       output[i] = forward(input[i], wh, wo, hidden); // 出力値を計算
       olearn(teacher[i], wo, hidden, output[i]);     // 出力層の重みを更新
+      hlearn(input[i], teacher[i], wh, wo, hidden, output[i]); // 隠れ層の重みを更新
     }
   }
 
@@ -59,7 +61,7 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
-// 出力値を計算(data: 1行文のインプット, wh: 隠れ層の重み, wo: 出力層の重み, hi: 隠れ層での値)
+// 出力値を計算(data: 1行分のインプット, wh: 隠れ層の重み, wo: 出力層の重み, hi: 隠れ層での値)
 double forward(double data[], double wh[][INPUTNO + 1], double wo[], double hi[]) {
   double u, o; // 入力に重みを掛けた値(u: 隠れ層, o: 出力層)
 
@@ -80,13 +82,30 @@ double forward(double data[], double wh[][INPUTNO + 1], double wo[], double hi[]
 
 // 出力層の重みの更新(teacher: 教師データ, wo: 出力層の重み, hi: 隠れ層の値, output: 出力値)
 void olearn(int teacher, double wo[], double hi[], double output) {
+  double d = (teacher - output) * output * (1 - output);
+
   // 重みを更新
   for (int i = 0; i < HIDDENNO; i++) {
-    wo[i] += ALPHA * (teacher - output) * output * (1 - output) * hi[i];
+    wo[i] += ALPHA * d * hi[i];
   }
 
   // 閾値を更新
-  wo[HIDDENNO] += ALPHA * (teacher - output) * output * (1 - output) * (-1);
+  wo[HIDDENNO] += ALPHA * d * (-1);
+}
+
+// 隠れ層の重みを更新(data: 1行分のインプット, teacher: 教師データ, wh: 隠れ層の重み, wo: 出力層の重み, hi: 隠れ層の値, output: 出力値)
+void hlearn(double data[], int teacher, double wh[][INPUTNO + 1], double wo[], double hi[], double output) {
+  double d = (teacher - output) * output * (1 - output);
+
+  for (int i = 0; i < HIDDENNO; i++) {
+    // 重みを更新
+    for (int j = 0; j < INPUTNO; j++) {
+      wh[i][j] += ALPHA * hi[i] * (1 - hi[i]) * wo[i] * d * data[j];
+    }
+
+    // 閾値を更新
+    wh[i][INPUTNO] += ALPHA * hi[i] * (1 - hi[i]) * wo[i] * d * (-1);
+  }
 }
 
 // データ読み込み(fileloc: 読み込むファイル, input: input保存用, teacher: 教師データ保存用, n: 行数保存用)
