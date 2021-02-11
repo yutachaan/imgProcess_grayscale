@@ -2,22 +2,37 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 
 #define INPUTNO 3
 #define MAXINPUTNO 8
+#define HIDDENNO 3
 
 double f_sigmoid(double u);
 void read_data(char *fileloc, double input[][INPUTNO], int teacher[], int *n);
 void save_data(char filename[], double input[][INPUTNO], int teacher[], double output[], int n);
 
 int main(int argc, char *argv[]) {
-  int n;
-  double input[MAXINPUTNO][INPUTNO];
-  int teacher[MAXINPUTNO];
-  double output[MAXINPUTNO];
+  int n;                             // 行数
+  double input[MAXINPUTNO][INPUTNO]; // インプット
+  int teacher[MAXINPUTNO];           // 教師データ
+  double output[MAXINPUTNO];         // 学習結果
 
   // データの読み込み
   read_data(argv[1], input, teacher, &n);
+
+  // 各層の重みを乱数で初期化
+  double wh[HIDDENNO][INPUTNO]; // 隠れ層
+  double wo[HIDDENNO];          // 出力層
+
+  srand((unsigned int)time(NULL));
+
+  for (int i = 0; i < HIDDENNO; i++) {
+    wo[i] = rand() / (double)RAND_MAX;
+    for (int j = 0; j < INPUTNO; j++) {
+      wh[i][j] = rand() / (double)RAND_MAX;
+    }
+  }
 
   // 学習済みデータの出力
   save_data("out/data_after.csv", input, teacher, output, n);
