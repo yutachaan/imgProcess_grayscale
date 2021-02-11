@@ -3,14 +3,17 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
+#include <float.h>
 
 #define INPUTNO 3
-#define MAXINPUTNO 8
+#define MAXINPUTNO 10
 #define HIDDENNO 3
+#define LIMIT 0.01
 
 double f_sigmoid(double u);
 void read_data(char *fileloc, double input[][INPUTNO], int teacher[], int *n);
 void save_data(char filename[], double input[][INPUTNO], int teacher[], double output[], int n);
+double forward(double e[], double wh[][INPUTNO], double wo[], double hi[]);
 
 int main(int argc, char *argv[]) {
   int n;                             // 行数
@@ -34,8 +37,37 @@ int main(int argc, char *argv[]) {
     }
   }
 
+  // 学習
+  double hidden[HIDDENNO]; // 隠れ層での値
+  double err = DBL_MAX;    // 誤差
+  while (err > LIMIT) {
+    err = 0;
+    for (int i = 0; i < n; i++) {
+      output[i] = forward(input[i], wh, wo, hidden); // 出力値を計算
+    }
+  }
+
   // 学習済みデータの出力
   save_data("out/data_after.csv", input, teacher, output, n);
+
+  return 0;
+}
+
+// 出力値を計算(e: 1行文のインプット, wh: 隠れ層の重み, wo: 出力層の重み, hi: 隠れ層での値)
+double forward(double e[], double wh[][INPUTNO], double wo[], double hi[]) {
+  double u, o; // 入力に重みを掛けた値(u: 隠れ層, o: 出力層)
+
+  // 隠れ層の値を求める
+  for (int i = 0; i < HIDDENNO; i++) {
+    u = 0;
+    for (int j = 0; j < INPUTNO; j++) u += e[j] * wh[i][j];
+    hi[i] = f_sigmoid(u);
+  }
+
+  // 出力層の値を求めて返却
+  o = 0;
+  for (int i = 0; i < HIDDENNO; i++) o += hi[i] * wo[i];
+  return f_sigmoid(o);
 }
 
 // データ読み込み(fileloc: 読み込むファイル, input: input保存用, teacher: 教師データ保存用, n: 行数保存用)
