@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
   FILE *img_high;      // グレイスケール画像
   RGB *rgb;            // RGB画像データ
   unsigned char *gray; // グレイスケール画像データ
-  int width, height;   // 画像の横幅、縦幅
+  int width, height;   // 画像の横幅，縦幅
 
   // コマンドライン引数の数が適切でない場合プログラムを終了
   if (argc != 3) exit(1);

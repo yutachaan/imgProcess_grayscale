@@ -131,7 +131,7 @@ void k_nearest_neighbor(double coord1[][INPUTNO], int category1[], int n1, doubl
     // 構造体を距離でソート(昇順)
     qsort(dis, n1, sizeof(distance_t), cmp);
 
-    // 距離が短い順に上位k個について、各クラスタの数を求める
+    // 距離が短い順に上位k個について，各クラスタの数を求める
     for (int j = 0; j < k; j++) {
       if (category1[dis[j].i] == 1) num1++;
       else num2++;
@@ -166,7 +166,7 @@ void k_means(double coord[][INPUTNO], int category[], int n, int k) {
     }
     if (i == k) break;
 
-    // 重心が変化している場合、重心を更新し処理を続行
+    // 重心が変化している場合，重心を更新し処理を続行
     for (i = 0; i < k; i++) {
       g[i][0] = g_tmp[i][0];
       g[i][1] = g_tmp[i][1];

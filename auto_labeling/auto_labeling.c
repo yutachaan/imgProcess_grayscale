@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
   int label;
   for (int i = 0; i < WIDTH; i++) {
     for (int j = 0; j < HEIGHT; j++) {
-      // 背景でなく、まだラベルが設定されていない場合
+      // 背景でなく，まだラベルが設定されていない場合
       if (gray[i][j] == 0 && gray_lab[i][j] == 0) {
         label+=5;
         labeling(gray, gray_lab, i, j, label);
@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
   srand((unsigned int)time(NULL));
   for (int i = 0; i < WIDTH; i++) {
     for (int j = 0; j < HEIGHT; j++) {
-      // 背景でなく、まだラベルが設定されていない場合
+      // 背景でなく，まだラベルが設定されていない場合
       if (gray[i][j] == 0 && rgb_lab[i][j].r == 0) {
         labeling_color(gray, rgb_lab, i, j, 1 + rand() % 255, 1 + rand() % 255, 1 + rand() % 255);
       }
@@ -88,7 +88,7 @@ void skip_header(FILE *img) {
 
 // ラベリング(gray: 2値化済みのグレイスケール画像のデータ, gray_lab: ラベリング後の画像データ, x, y: 座標, label: ラベル値)
 int labeling(unsigned char gray[][HEIGHT], unsigned char gray_lab[][HEIGHT], int x, int y, int label) {
-  // 枠外の場合、背景の場合、既にラベルが設定されている場合は終了
+  // 枠外の場合，背景の場合，既にラベルが設定されている場合は終了
   if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT || gray[x][y] == 255 || gray_lab[x][y] != 0) return 1;
 
   gray_lab[x][y] = label;

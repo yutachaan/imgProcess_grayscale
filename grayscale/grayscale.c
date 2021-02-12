@@ -13,7 +13,7 @@ unsigned char convert_pixel_to_gray(RGB rgb[], int mode);
 
 int main(int argc, char *argv[]) {
   FILE *img;         // 元画像
-  int width, height; // 画像の横幅、縦幅
+  int width, height; // 画像の横幅，縦幅
   RGB *rgb;          // RGB画像用
 
   // コマンドライン引数の数が適切でない場合プログラムを終了
@@ -41,10 +41,10 @@ int main(int argc, char *argv[]) {
   // カラー画像から青を抽出して出力
   convert_img_to_gray(rgb, "blue.pgm", width, height);
 
-  // 赤・緑・青の平均値を求め、抽出
+  // 赤・緑・青の平均値を求め，抽出
   convert_img_to_gray(rgb, "mean.pgm", width, height);
 
-  // 輝度Yを求め、抽出
+  // 輝度Yを求め，抽出
   convert_img_to_gray(rgb, "y.pgm", width, height);
 
   free(rgb);

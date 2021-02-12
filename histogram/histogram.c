@@ -101,7 +101,7 @@ void smooth_histogram(unsigned char gray[], int freq[], int width, int height, i
     if (abs(freq_goal - cum_freq) < abs(freq_goal - cum_freq - freq[i])) {
       cum_freq = 0;                                                  // 蓄積頻度を0にする
       cur_thick[i] = (i ? cur_thick[i - 1] : 0) + 1;                 // 補正濃度を1加算(iが0の場合は前の補正濃度の値を0とする)
-      if (cur_thick[i] >= depth_goal) cur_thick[i] = depth_goal - 1; // 補正濃度が目標階調数以上の場合、(目標階調数-1)にする
+      if (cur_thick[i] >= depth_goal) cur_thick[i] = depth_goal - 1; // 補正濃度が目標階調数以上の場合，(目標階調数-1)にする
     }
     else {
       cur_thick[i] = i ? cur_thick[i - 1] : 0;                       // 補正濃度の値を現在の補正濃度の値にする
