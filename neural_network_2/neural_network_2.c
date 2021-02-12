@@ -1,181 +1,179 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 #include <time.h>
-#include <float.h>
+#include <math.h>
 
-#define INPUTNO 3
-#define MAXINPUTNO 10
-#define HIDDENNO 3
-#define LIMIT 0.01
-#define ALPHA 0.1
+#define DATANO 8   // データ数
+#define INPUTNO 3  // 入力数
+#define HIDDENNO 3 // 隠れ層の数
 
-double f_sigmoid(double u);
-void read_data(char *fileloc, double input[][INPUTNO], double teacher[], int *n);
-void save_data(char filename[], double input[][INPUTNO], double teacher[], double output[], int n);
-void save_err(char filename[], double err_data[], int n);
-double forward(double input[][INPUTNO], double wh[][INPUTNO + 1], double wo[], double hi[], int i);
-void olearn(double teacher, double wo[], double hi[], double output);
-void hlearn(double input[][INPUTNO], double teacher, double wh[][INPUTNO + 1], double wo[], double hi[], double output, int i);
+void train(double input[][INPUTNO], double wh[][INPUTNO + 1], double hidden[][HIDDENNO], double wo[], double output[], double teacher[]);
+void read_data(char *fileloc, double input[][INPUTNO], double teacher[]);
+void save_predict(char filename[], double input[][INPUTNO], double teacher[], double output[]);
+void save_err(char filename[], double err_transitions[], int count);
+double f_sigmoid(double x);
+double d_sigmoid(double x);
 
 int main(int argc, char *argv[]) {
-  int n;                             // 行数
-  double input[MAXINPUTNO][INPUTNO]; // インプット
-  double teacher[MAXINPUTNO];        // 教師データ
-  double output[MAXINPUTNO];         // 学習結果
-
   // <---------- データの読み込み ---------->
-  read_data(argv[1], input, teacher, &n);
+  double input[DATANO][INPUTNO]; // 入力
+  double teacher[DATANO];        // 教師データ
 
-  // <---------- 各層の重みを乱数で初期化 ---------->
-  double wh[HIDDENNO][INPUTNO + 1]; // 隠れ層
-  double wo[HIDDENNO + 1];          // 出力層
+  read_data(argv[1], input, teacher);
 
-  srand((unsigned int)time(NULL));
+  // <---------- 各層の重みを0から1の乱数で初期化 ---------->
+  double wh[HIDDENNO][INPUTNO + 1]; // 入力層から隠れ層の重み
+  double wo[HIDDENNO + 1];          // 隠れ層から出力層の重み
 
-  for (int i = 0; i < HIDDENNO; i++) {
-    for (int j = 0; j <= INPUTNO; j++) {
-      wh[i][j] = ((double)rand() / ((double)RAND_MAX + 1));
+  srand((unsigned)time(NULL));
+
+  for (int j = 0; j < HIDDENNO; j++) {
+    for (int k = 0; k < INPUTNO + 1; k++) {
+      wh[j][k] = ((double)rand() / ((double)RAND_MAX + 1));
     }
   }
-  for (int i = 0; i <= HIDDENNO; i++) {
-    wo[i] = ((double)rand() / ((double)RAND_MAX + 1));
+  for (int j = 0; j < HIDDENNO + 1; j++) {
+    wo[j] = ((double)rand() / ((double)RAND_MAX + 1));
   }
 
-  // <---------- 学習 ---------->
-  double hidden[HIDDENNO]; // 隠れ層での値
-  double err = DBL_MAX;    // 誤差
-  double err_data[200];    // 誤差の変移
-  int count = 0;           // 繰り返し回数
+  // <---------- 予測 ---------->
+  double hidden[DATANO][HIDDENNO]; // 隠れ層での出力値
+  double output[DATANO];           // 出力層での出力値(学習結果)
+  double err = 100;                // 誤差
+  double limit = 0.01;             // 誤差がこの値に収束するまで繰り返す
+  int count = 0;                   // 繰り返した数
+  double err_transitions[50000];   // 誤差の変移
 
-  while (count < 230) {
+  while (err > limit) {
+    // 学習
+    train(input, wh, hidden, wo, output, teacher);
+
+    // 誤差を計算
     err = 0;
-    for (int i = 0; i < n; i++) {
-      output[i] = forward(input, wh, wo, hidden, i);           // 出力値を計算
-      olearn(teacher[i], wo, hidden, output[i]);               // 出力層の重みを更新
-      hlearn(input, teacher[i], wh, wo, hidden, output[i], i); // 隠れ層の重みを更新
-      err += pow((output[i] - teacher[i]), 2);                 // 誤差を計算
+    for (int i = 0; i < DATANO; i++) {
+      err += pow((output[i] - teacher[i]), 2);
     }
-    err_data[count] = err;
+    err_transitions[count] = err;
     count++;
   }
 
-  // 学習済みデータの出力
-  save_data("out/data_after.csv", input, teacher, output, n);
+  // <---------- データの出力 ---------->
+  // 読み込んだデータに学習結果を加えて出力
+  save_predict("out/predict.csv", input, teacher, output);
 
   // 誤差の変移の出力
-  save_err("out/err.csv", err_data, count);
+  save_err("out/err.csv", err_transitions, count);
 
   return 0;
 }
 
-// 出力値を計算(input: input, wh: 隠れ層の重み, wo: 出力層の重み, hi: 隠れ層での値, i: 何行目か)
-double forward(double input[][INPUTNO], double wh[][INPUTNO + 1], double wo[], double hi[], int i) {
-  double u, o; // 入力に重みを掛けた値(u: 隠れ層, o: 出力層)
+// 学習(input: 入力, wh: 入力層から隠れ層の重み, hidden: 隠れ層での出力値, wo: 隠れ層から出力層の重み, output: 出力層での出力値, teacher: 教師データ)
+void train(double input[][INPUTNO], double wh[][INPUTNO + 1], double hidden[][HIDDENNO], double wo[], double output[], double teacher[]) {
+  double temp;         // 出力値の一時保存
+  double alpha = 0.01; // 学習係数
 
-  // 隠れ層の値を求める
-  for (int j = 0; j < HIDDENNO; j++) {
-    u = 0;
-    for (int k = 0; k < INPUTNO; k++) u += input[i][k] * wh[j][k];
-    u -= wh[j][INPUTNO];
-    hi[j] = f_sigmoid(u);
-  }
-
-  // 出力層の値を求めて返却
-  o = 0;
-  for (int j = 0; j < HIDDENNO; j++) o += hi[j] * wo[j];
-  o -= wo[HIDDENNO];
-  return f_sigmoid(o);
-}
-
-// 出力層の重みの更新(teacher: 教師データ, wo: 出力層の重み, hi: 隠れ層の値, output: 出力値)
-void olearn(double teacher, double wo[], double hi[], double output) {
-  double d = (output - teacher) * output * (1 - output);
-
-  // 重みを更新
-  for (int i = 0; i < HIDDENNO; i++) {
-    wo[i] -= ALPHA * d * hi[i];
-  }
-
-  // 閾値を更新
-  wo[HIDDENNO] -= ALPHA * d * (-1);
-}
-
-// 隠れ層の重みを更新(input: input, teacher: 教師データ, wh: 隠れ層の重み, wo: 出力層の重み, hi: 隠れ層の値, output: 出力値, i: 何行目か)
-void hlearn(double input[][INPUTNO], double teacher, double wh[][INPUTNO + 1], double wo[], double hi[], double output, int i) {
-  double d = (teacher - output) * output * (1 - output);
-
-  for (int j = 0; j < HIDDENNO; j++) {
-    // 重みを更新
-    for (int k = 0; k < INPUTNO; k++) {
-      wh[j][k] += ALPHA * hi[j] * (1 - hi[j]) * wo[j] * d * input[i][k];
+  for (int i = 0; i < DATANO; i++) {
+    // <---------- forward ---------->
+    // 隠れ層での出力値を求める
+    for (int j = 0; j < HIDDENNO; j++) {
+      temp = 0;
+      for (int k = 0; k < INPUTNO; k++) {
+        temp += input[i][k] * wh[j][k];
+      }
+      temp -= wh[j][INPUTNO];
+      hidden[i][j] = f_sigmoid(temp);
     }
 
-    // 閾値を更新
-    wh[j][INPUTNO] += ALPHA * hi[j] * (1 - hi[j]) * wo[j] * d * (-1);
+    // 出力層での出力値を求める
+    temp = 0;
+    for (int j = 0; j < HIDDENNO; j++) {
+      temp += hidden[i][j] * wo[j];
+    }
+    temp -= wo[HIDDENNO];
+    output[i] = f_sigmoid(temp);
+
+    // <----------- backward ---------->
+    // 隠れ層から出力層の重みを更新
+    for (int j = 0; j < HIDDENNO; j++) {
+      wo[j] -= alpha * hidden[i][j] * d_sigmoid(output[i]) * (output[i] - teacher[i]);
+    }
+    wo[HIDDENNO] -= alpha * (-1) * d_sigmoid(output[i]) * (output[i] - teacher[i]);
+
+    // 入力層から隠れ層の重みを更新
+    for (int k = 0; k < INPUTNO; k++) {
+      for (int j = 0; j < HIDDENNO; j++) {
+        wh[j][k] -= alpha * input[i][k] * d_sigmoid(hidden[i][j]) * d_sigmoid(output[i]) * (output[i] - teacher[i]) * wo[j];
+      }
+    }
+    for (int j = 0; j < HIDDENNO; j++) {
+      wh[j][INPUTNO] -= alpha * (-1) * d_sigmoid(hidden[i][j]) * d_sigmoid(output[i]) * (output[i] - teacher[i]) * wo[j];
+    }
   }
 }
 
-// データ読み込み(fileloc: 読み込むファイル, input: input保存用, teacher: 教師データ保存用, n: 行数保存用)
-void read_data(char *fileloc, double input[][INPUTNO], double teacher[], int *n) {
+// データ読み込み(fileloc: 読み込むファイル, input: input保存用, teacher: 教師データ保存用)
+void read_data(char *fileloc, double input[][INPUTNO], double teacher[]) {
   FILE *data;
-  int mm, nn;
   char buf[256];
+  int m, n;      // 列番号, 行番号
 
   if ((data = fopen(fileloc, "r")) == NULL) exit(1);
 
-  nn = 0;
+  n = 0;
   while (fgets(buf, sizeof(buf), data) != NULL) {
-    mm = 0;
+    m = 0;
     char *token = strtok(buf, " ");
 
     while (token != NULL) {
-      if (mm < 3) input[nn][mm] = atof(token); // 最初の3つはinputに格納
-      else teacher[nn] = atof(token);          // 最後の1つはteacherに格納
+      if (m < 3) input[n][m] = atof(token); // 最初の3つはinputに格納
+      else teacher[n] = atof(token);        // 最後の1つはteacherに格納
 
       token = strtok(NULL, " ");
-      mm++;
+      m++;
     }
 
-    nn++;
-  }
-
-  fclose(data);
-
-  *n = nn;
-}
-
-// データを保存(filename: 保存するファイル名, input: input, teacher: 教師データ, output: 学習結果, n: 行数)
-void save_data(char filename[], double input[][INPUTNO], double teacher[], double output[], int n) {
-  FILE *data;
-
-  if ((data = fopen(filename, "w")) == NULL) exit(1);
-
-  for (int i = 0; i < n; i++) {
-    for (int j = 0; j < INPUTNO; j++) {
-      fprintf(data, "%d,", (int)input[i][j]);               // inputを記述
-    }
-    fprintf(data, "%d,%.4f\n", (int)teacher[i], output[i]); // 教師データと学習結果を記述
+    n++;
   }
 
   fclose(data);
 }
 
-// エラーの変移を保存(filaname: 保存するファイル名, err_data: エラーの変移, n: 行数)
-void save_err(char filename[], double err_data[], int n) {
+// 予測データを保存(filename: 保存するファイル名, input: 入力, teacher: 教師データ, output: 学習結果)
+void save_predict(char filename[], double input[][INPUTNO], double teacher[], double output[]) {
   FILE *data;
 
   if ((data = fopen(filename, "w")) == NULL) exit(1);
 
-  for (int i = 0; i < n; i++) {
-    fprintf(data, "%d,%.4f\n", i, err_data[i]);
+  for (int i = 0; i < DATANO; i++) {
+    for (int k = 0; k < INPUTNO; k++) {
+      fprintf(data, "%d,", (int)input[i][k]);               // 入力を出力
+    }
+    fprintf(data, "%d,%.5f\n", (int)teacher[i], output[i]); // 教師データと学習結果を出力
+  }
+
+  fclose(data);
+}
+
+// エラーの変移を保存(filaname: 保存するファイル名, err_data: エラーの変移, count: 行数)
+void save_err(char filename[], double err_transitions[], int count) {
+  FILE *data;
+
+  if ((data = fopen(filename, "w")) == NULL) exit(1);
+
+  for (int i = 0; i < count; i++) {
+    fprintf(data, "%d,%.5f\n", i, err_transitions[i]);
   }
 
   fclose(data);
 }
 
 // シグモイド関数
-double f_sigmoid(double u) {
-  return 1 / (1 + exp(-u));
+double f_sigmoid(double x) {
+  return 1 / (1 + exp(-x));
+}
+
+// シグモイド関数の微分
+double d_sigmoid(double x) {
+  return x * (1 - x);
 }
