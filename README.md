@@ -11,7 +11,7 @@
 - 第五回: [ノイズ除去・鮮鋭化](https://github.com/yutachaan/img_processing/tree/master/denoise_and_sharp)
 
 - 第六回: [2値化・ディザ](https://github.com/yutachaan/img_processing/tree/master/binarize_and_dither)  
-  ※課題1は固定しきい値法を使用。
+  ※課題1は固定しきい値法を使用．
 
 - 第八回: [エッジ検出](https://github.com/yutachaan/img_processing/tree/master/edge_detection)
 
@@ -19,23 +19,26 @@
   ※PSNR値はairplane → 29.146487, lenna → 28.983259
 
 - 第十回: [画質改善](https://github.com/yutachaan/img_processing/tree/master/quality_improvement)  
-  ※第一引数に低画質カラー画像、第二引数に高画質グレイスケール画像のパスを指定する。
+  ※第一引数に低画質カラー画像，第二引数に高画質グレイスケール画像のパスを指定する．
 
 - 第十一回: [歪み除去](https://github.com/yutachaan/img_processing/tree/master/affine_transformation)  
-  ※第一引数に入力画像、第二引数に目的画像のパスを指定する。
+  ※第一引数に入力画像，第二引数に目的画像のパスを指定する．
 
 - 第十二回: [自動ラベリング](https://github.com/yutachaan/img_processing/tree/master/auto_labeling)  
-  ※見やすいようにラベル値は5ずつ増加させている。
+  ※見やすいようにラベル値は5ずつ増加させている．
 
 - 第十三回: [クラスタリング](https://github.com/yutachaan/img_processing/tree/master/clustering)  
-  ※第一引数にdata_01、第二引数にdata_02、第三引数にdata_03、第四引数にdata_04を指定する。  
-  ※プロットは、第一引数に分類前のデータ、第二引数に分類後のデータをそれぞれcsvで指定し、第三引数にクラスタ数(最大10)を指定する。
+  ※第一引数にdata_01，第二引数にdata_02，第三引数にdata_03，第四引数にdata_04のパスを指定する．  
+  ※プロットは，第一引数に分類前のデータ，第二引数に分類後のデータをそれぞれcsvで指定し，第三引数にクラスタ数(最大10)を指定する．
 
 - 第十四回: [ニューラルネットワーク基礎](https://github.com/yutachaan/img_processing/tree/master/neural_network)  
-  ※第一引数にdata01, 第二引数にdata02，第三引数にdata03を指定する．  
+  ※第一引数にdata01, 第二引数にdata02，第三引数にdata03のパスを指定する．  
   ※プロットは，第一引数に分類前のデータ，第二引数に分類後のデータを指定する．
 
-実行時、第一引数に変換したい画像のパスを指定する。
+- 第十五回: [ニューラルネットワークの実装](https://github.com/yutachaan/img_processing/tree/master/neural_network_2)  
+  ※第一引数にデータのパスを指定する．
+
+特に断りがない場合，実行時，第一引数に変換したい画像のパスを指定する．
 
 <a href="https://gitmoji.carloscuesta.me">
   <img src="https://img.shields.io/badge/gitmoji-%20😜%20😍-FFDD67.svg?style=flat-square" alt="Gitmoji">
