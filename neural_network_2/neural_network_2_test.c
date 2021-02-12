@@ -11,7 +11,7 @@
 
 void train(double input[][INPUTNO], double wh[][INPUTNO + 1], double hidden[][HIDDENNO], double wo[], double output[], double teacher[]);
 void read_data(char *fileloc, double input[][INPUTNO], double teacher[]);
-// void save_data(char filename[], double input[][INPUTNO], double teacher[], double output[], int n);
+void save_predict(char filename[], double input[][INPUTNO], double teacher[], double output[]);
 // void save_err(char filename[], double err_data[], int n);
 double f_sigmoid(double x);
 double d_sigmoid(double x);
@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
     wo[j] = ((double)rand() / ((double)RAND_MAX + 1));
   }
 
-  // // <---------- 学習 ---------->
+  // // <---------- 学習・予測 ---------->
   double hidden[DATANO][HIDDENNO]; // 隠れ層での出力値
   double output[DATANO];           // 出力層での出力値(学習結果)
   double epoch = 10000;            // 繰り返し回数
@@ -48,15 +48,23 @@ int main(int argc, char *argv[]) {
   // int count = 0;           // 繰り返し回数
 
   for (int i = 0; i < epoch; i++) {
-  //   err = 0;
-    train(input, wh, hidden, wo, output, teacher); // 学習
-  //   err += pow((output[i] - teacher[i]), 2);                 // 誤差を計算
-  //   err_data[count] = err;
-  //   count++;
+    // 学習
+    train(input, wh, hidden, wo, output, teacher);
+
+    // 出力層での出力値とepochを表示
+    printf("z = ");
+    for (int j = 0; j < DATANO; j++) printf("%f, ", output[j]);
+    printf("epoch: %d\n", i);
+
+    // err = 0;
+    // err += pow((output[i] - teacher[i]), 2);                 // 誤差を計算
+    // err_data[count] = err;
+    // count++;
   }
 
-  // // 学習済みデータの出力
-  // save_data("out/data_after.csv", input, teacher, output, n);
+  // <---------- データの出力 ---------->
+  // 読み込んだデータに学習結果を加えて出力
+  save_predict("out/predict.csv", input, teacher, output);
 
   // // 誤差の変移の出力
   // save_err("out/err.csv", err_data, count);
@@ -135,21 +143,21 @@ void read_data(char *fileloc, double input[][INPUTNO], double teacher[]) {
   fclose(data);
 }
 
-// // データを保存(filename: 保存するファイル名, input: input, teacher: 教師データ, output: 学習結果, n: 行数)
-// void save_data(char filename[], double input[][INPUTNO], double teacher[], double output[], int n) {
-//   FILE *data;
+// 予測データを保存(filename: 保存するファイル名, input: 入力, teacher: 教師データ, output: 学習結果)
+void save_predict(char filename[], double input[][INPUTNO], double teacher[], double output[]) {
+  FILE *data;
 
-//   if ((data = fopen(filename, "w")) == NULL) exit(1);
+  if ((data = fopen(filename, "w")) == NULL) exit(1);
 
-//   for (int i = 0; i < n; i++) {
-//     for (int j = 0; j < INPUTNO; j++) {
-//       fprintf(data, "%d,", (int)input[i][j]);               // inputを記述
-//     }
-//     fprintf(data, "%d,%.4f\n", (int)teacher[i], output[i]); // 教師データと学習結果を記述
-//   }
+  for (int i = 0; i < DATANO; i++) {
+    for (int k = 0; k < INPUTNO; k++) {
+      fprintf(data, "%d,", (int)input[i][k]);               // 入力を出力
+    }
+    fprintf(data, "%d,%.5f\n", (int)teacher[i], output[i]); // 教師データと学習結果を出力
+  }
 
-//   fclose(data);
-// }
+  fclose(data);
+}
 
 // // エラーの変移を保存(filaname: 保存するファイル名, err_data: エラーの変移, n: 行数)
 // void save_err(char filename[], double err_data[], int n) {
