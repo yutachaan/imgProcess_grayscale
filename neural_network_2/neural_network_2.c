@@ -17,7 +17,7 @@ void save_data(char filename[], double input[][INPUTNO], int teacher[], double o
 void save_err(char filename[], double err_data[], int n);
 double forward(double input[][INPUTNO], double wh[][INPUTNO + 1], double wo[], double hi[], int i);
 void olearn(int teacher, double wo[], double hi[], double output);
-void hlearn(double data[], int teacher, double wh[][INPUTNO + 1], double wo[], double hi[], double output);
+void hlearn(double input[][INPUTNO], int teacher, double wh[][INPUTNO + 1], double wo[], double hi[], double output, int i);
 
 int main(int argc, char *argv[]) {
   int n;                             // 行数
@@ -49,21 +49,17 @@ int main(int argc, char *argv[]) {
   double err = DBL_MAX;    // 誤差
   double err_data[200];    // 誤差の変移
   int count = 0;           // 繰り返し回数
-  while (count < 200) {
-    err = 0;
-    for (int i = 0; i < n; i++) {
-      output[i] = forward(input, wh, wo, hidden, i);           // 出力値を計算
-      olearn(teacher[i], wo, hidden, output[i]);               // 出力層の重みを更新
-      hlearn(input[i], teacher[i], wh, wo, hidden, output[i]); // 隠れ層の重みを更新
-      err += pow((output[i] - teacher[i]), 2);                 // 誤差を計算
-    }
-    err_data[count] = err;
-    count++;
 
-    for (int i = 0; i < HIDDENNO; i++) {
-      for (int j = 0; j <= INPUTNO; j++) printf("%f,", wh[i][j]);
-    }
-    printf("\n");
+  while (count < 200) {
+  err = 0;
+  for (int i = 0; i < 7; i++) {
+    output[i] = forward(input, wh, wo, hidden, i);           // 出力値を計算
+    olearn(teacher[i], wo, hidden, output[i]);               // 出力層の重みを更新
+    hlearn(input, teacher[i], wh, wo, hidden, output[i], i); // 隠れ層の重みを更新
+    err += pow((output[i] - teacher[i]), 2);                 // 誤差を計算
+  }
+  err_data[count] = err;
+  count++;
   }
 
   // 学習済みデータの出力
@@ -75,7 +71,7 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
-// 出力値を計算(data: 1行分のインプット, wh: 隠れ層の重み, wo: 出力層の重み, hi: 隠れ層での値)
+// 出力値を計算(input: input, wh: 隠れ層の重み, wo: 出力層の重み, hi: 隠れ層での値, i: 何行目か)
 double forward(double input[][INPUTNO], double wh[][INPUTNO + 1], double wo[], double hi[], int i) {
   double u, o; // 入力に重みを掛けた値(u: 隠れ層, o: 出力層)
 
@@ -107,18 +103,18 @@ void olearn(int teacher, double wo[], double hi[], double output) {
   wo[HIDDENNO] += ALPHA * d * (-1);
 }
 
-// 隠れ層の重みを更新(data: 1行分のインプット, teacher: 教師データ, wh: 隠れ層の重み, wo: 出力層の重み, hi: 隠れ層の値, output: 出力値)
-void hlearn(double data[], int teacher, double wh[][INPUTNO + 1], double wo[], double hi[], double output) {
+// 隠れ層の重みを更新(input: input, teacher: 教師データ, wh: 隠れ層の重み, wo: 出力層の重み, hi: 隠れ層の値, output: 出力値, i: 何行目か)
+void hlearn(double input[][INPUTNO], int teacher, double wh[][INPUTNO + 1], double wo[], double hi[], double output, int i) {
   double d = (teacher - output) * output * (1 - output);
 
-  for (int i = 0; i < HIDDENNO; i++) {
+  for (int j = 0; j < HIDDENNO; j++) {
     // 重みを更新
-    for (int j = 0; j < INPUTNO; j++) {
-      wh[i][j] += ALPHA * hi[i] * (1 - hi[i]) * wo[i] * d * data[j];
+    for (int k = 0; k < INPUTNO; k++) {
+      wh[j][k] += ALPHA * hi[j] * (1 - hi[j]) * wo[j] * d * input[i][k];
     }
 
     // 閾値を更新
-    wh[i][INPUTNO] += ALPHA * hi[i] * (1 - hi[i]) * wo[i] * d * (-1);
+    wh[j][INPUTNO] += ALPHA * hi[j] * (1 - hi[j]) * wo[j] * d * (-1);
   }
 }
 
