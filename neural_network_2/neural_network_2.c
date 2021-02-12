@@ -41,9 +41,9 @@ int main(int argc, char *argv[]) {
   double hidden[DATANO][HIDDENNO]; // 隠れ層での出力値
   double output[DATANO];           // 出力層での出力値(学習結果)
   double err = 100;                // 誤差
-  double limit = 0.01;             // 誤差がこの値に収束するまで繰り返す
+  double limit = 0.001;            // 誤差がこの値未満になるまで繰り返す
   int count = 0;                   // 繰り返した数
-  double err_transitions[50000];   // 誤差の変移
+  double err_transitions[10000];   // 誤差の変移
 
   while (err > limit) {
     // 学習
@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
 // 学習(input: 入力, wh: 入力層から隠れ層の重み, hidden: 隠れ層での出力値, wo: 隠れ層から出力層の重み, output: 出力層での出力値, teacher: 教師データ)
 void train(double input[][INPUTNO], double wh[][INPUTNO + 1], double hidden[][HIDDENNO], double wo[], double output[], double teacher[]) {
   double temp;         // 出力値の一時保存
-  double alpha = 0.01; // 学習係数
+  double alpha = 6.2;  // 学習係数
 
   for (int i = 0; i < DATANO; i++) {
     // <---------- forward ---------->
