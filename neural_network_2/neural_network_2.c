@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
 // 学習(input: 入力, wh: 入力層から隠れ層の重み, hidden: 隠れ層での出力値, wo: 隠れ層から出力層の重み, output: 出力層での出力値, teacher: 教師データ)
 void train(double input[][INPUTNO], double wh[][INPUTNO + 1], double hidden[][HIDDENNO], double wo[], double output[], double teacher[]) {
   double temp;         // 出力値の一時保存
-  double alpha = 6.2;  // 学習係数
+  double alpha = 3.5;  // 学習係数
 
   for (int i = 0; i < DATANO; i++) {
     // <---------- forward ---------->
